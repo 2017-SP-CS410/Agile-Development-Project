@@ -7,4 +7,5 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Game name here')
-        self.stacked_widget = QStackedWidget(GameWidget())
+        #self.stacked_widget = QStackedWidget(GameWidget())
+        self.setCentralWidget(GameWidget())
