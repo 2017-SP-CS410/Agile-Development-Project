@@ -8,6 +8,7 @@ class GameWidget(QGLWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setMinimumSize(640, 480)
 
 
     def initializeGL(self):
