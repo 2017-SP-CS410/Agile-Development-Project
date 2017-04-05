@@ -3,8 +3,15 @@ from PyQt5.QtOpenGL  import QGLWidget
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore    import *
 from textwrap        import dedent
-from PyQt5.QtMultimedia   import QAudio, QAudioDeviceInfo, QAudioFormat, QAudioOutput
+from PyQt5.QtMultimedia   import QSound
+import sys
 
+app = QCoreApplication(sys.argv)
 
-while True:
-    print("hello")
+sound = QSound("/home/asher/Agile-Development-Project/package/theme.wav")
+
+sound.setLoops(QSound.Infinite)
+
+sound.play()
+
+app.exec()
