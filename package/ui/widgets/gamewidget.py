@@ -112,3 +112,5 @@ word = "agile"
 result = (setCounts(word))
 print("Word Value = " + repr(setPointValue(word)) + " vowelCount: "  + repr(result['vowelCount']))
 
+print("why aren't you working!")
+
