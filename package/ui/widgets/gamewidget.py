@@ -2,6 +2,40 @@ from textwrap       import dedent
 from OpenGL.GL      import *
 from OpenGL.GLU     import *
 from PyQt5.QtOpenGL import QGLWidget
+import math
+
+
+def setCounts(word):
+    vowelCount = 0
+    constCount = 0
+    #add length over 4
+
+
+    for char in word:
+
+
+        if char == 'a' or char == 'e' or char == 'i' or char == 'o' or char == 'u':  # / or use ascii values in array?
+
+            vowelCount += 1
+
+        else:
+
+            constCount += 1
+
+
+    return {'vowelCount': vowelCount, 'constCount': constCount}
+
+
+def setPointValue(word):
+    wordLen = len(word)
+    dif = 0
+    result = setCounts(word)
+    if wordLen > 4:
+        dif = wordLen-4
+
+    pointValue = math.floor(((result['vowelCount'] / result['constCount'])) * 10)
+
+    return pointValue + dif
 
 
 class GameWidget(QGLWidget):
@@ -74,3 +108,7 @@ class GameWidget(QGLWidget):
 
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
+word = "agile"
+result = (setCounts(word))
+print("Word Value = " + repr(setPointValue(word)) + " vowelCount: "  + repr(result['vowelCount']))
+
