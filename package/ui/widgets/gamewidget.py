@@ -108,9 +108,39 @@ class GameWidget(QGLWidget):
 
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
+<<<<<<< HEAD
 word = "agile"
 result = (setCounts(word))
 print("Word Value = " + repr(setPointValue(word)) + " vowelCount: "  + repr(result['vowelCount']))
 
 print("why aren't you working!")
 
+=======
+
+    scrabbleVals = {'a': 1, 'b': 3,'c': 3,'d': 2,'e': 1,'f': 4,'g': 2,'h': 4,'i': 1,'j': 8,'k': 5,'l': 1,'m': 3,'n': 1,
+                    'o': 1,'p': 3,'q': 10,'r': 1,'s': 1,'t': 1,'u': 1,'v': 4,'w': 4,'x': 8,'y': 4,'z': 10}
+
+    def getLetterValue(word):
+        count = 0
+        for char in word:
+
+            for letter in GameWidget.scrabbleVals:
+
+                if char == letter:
+                    count += GameWidget.scrabbleVals[letter]
+
+        return count
+    def getFinalValue(word):
+        wordLength = len(word)
+        dif = 0
+        result = GameWidget.getLetterValue(word)
+
+        if wordLength > 4:
+            dif = wordLength -4
+
+        return result + dif
+
+    word = "bingo"
+    print(repr(getLetterValue(word)))
+    print(repr(getFinalValue(word)))
+>>>>>>> 49471c08c1dfbb6bf24c90b167e480e637f73ce7
