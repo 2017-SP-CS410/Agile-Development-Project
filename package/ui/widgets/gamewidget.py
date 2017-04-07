@@ -14,6 +14,7 @@ class GameWidget(QGLWidget):
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
+        
 
 
     def initializeCube(self):
@@ -177,6 +178,7 @@ class GameWidget(QGLWidget):
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
+        self.playMusic()
 
 
 
@@ -232,32 +234,38 @@ class GameWidget(QGLWidget):
         #glDrawArrays(GL_TRIANGLE_FAN, 0, len(self.vertices))
         self.renderCube()
 
+    def playMusic(self):
+        sound = QSound("/home/asher/Agile-Development-Project/package/theme.wav")
+        sound.setLoops(QSound.Infinite)
+        sound.play()
 
     def renderCube(self):
-        glUseProgram(self.cubeProg)
-        glBindVertexArray(self.cubeVao)
-        glDrawElements(
-            GL_TRIANGLE_FAN,
-            len(self.indices),
-            GL_UNSIGNED_INT,
-            c_void_p(0)
-        )
+        if hasattr(self, 'cubeProg'):
+            glUseProgram(self.cubeProg)
+            glBindVertexArray(self.cubeVao)
+            glDrawElements(
+                GL_TRIANGLE_FAN,
+                len(self.indices),
+                GL_UNSIGNED_INT,
+                c_void_p(0)
+            )
 
 
     def resizeGL(self, width, height):
-        glViewport(0, 0, width, height)
+        if hasattr(self, 'cubeProg'):
+            glViewport(0, 0, width, height)
 
-        camera = QMatrix4x4()
-        camera.perspective(60, 4.0/3.0, 0.1, 100.0)
-        camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
+            camera = QMatrix4x4()
+            camera.perspective(60, 4.0/3.0, 0.1, 100.0)
+            camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
 
-        glUseProgram(self.cubeProg)
-        glUniformMatrix4fv(
-            self.cubeProjMatLoc,
-            1,
-            GL_FALSE,
-            array('f', camera.data()).tostring()
-        )
+            glUseProgram(self.cubeProg)
+            glUniformMatrix4fv(
+                self.cubeProjMatLoc,
+                1,
+                GL_FALSE,
+                array('f', camera.data()).tostring()
+            )
 
 
     def sizeof(self, a):
