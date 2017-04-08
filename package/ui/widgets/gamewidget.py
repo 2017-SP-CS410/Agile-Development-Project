@@ -1,5 +1,6 @@
 from array          import array
 from ctypes         import c_void_p
+from enum           import Enum
 from textwrap       import dedent
 from OpenGL.GL      import *
 from OpenGL.GLU     import *
@@ -14,7 +15,11 @@ class GameWidget(QGLWidget):
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
+        self.character = {'x': 0, 'y': 0, 'speed': 1, 'state': self.State.walk}
 
+    class State(Enum):
+        walk = 1
+        type = 2
 
     def initializeCube(self):
 
@@ -171,14 +176,32 @@ class GameWidget(QGLWidget):
 
         self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
 
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == ord('w') - 32:
+            self.character['y'] += self.character['speed']
+
+        elif key == ord('a') - 32:
+            self.character['x'] -= self.character['speed']
+
+        elif key == ord('s') - 32:
+            self.character['y'] -= self.character['speed']
+
+        elif key == ord('d') - 32:
+            self.character['x'] += self.character['speed']
+
+        elif key == ord(' ') - 32:
+            if self.character['state'] == self.State.walk:
+                self.character['state'] = self.State.type
+
+            elif self.character['state'] == self.State.type:
+                self.character['state'] = self.State.walk
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
-
-
 
     def loadShaders(self):
         # create a GL Program Object
@@ -226,12 +249,10 @@ class GameWidget(QGLWidget):
 
         return program
 
-
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         #glDrawArrays(GL_TRIANGLE_FAN, 0, len(self.vertices))
         self.renderCube()
-
 
     def renderCube(self):
         glUseProgram(self.cubeProg)
@@ -242,7 +263,6 @@ class GameWidget(QGLWidget):
             GL_UNSIGNED_INT,
             c_void_p(0)
         )
-
 
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
@@ -258,7 +278,6 @@ class GameWidget(QGLWidget):
             GL_FALSE,
             array('f', camera.data()).tostring()
         )
-
 
     def sizeof(self, a):
         return a.itemsize * len(a)
