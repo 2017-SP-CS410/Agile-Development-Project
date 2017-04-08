@@ -15,11 +15,12 @@ class GameWidget(QGLWidget):
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
-        self.character = {'x': 0, 'y': 0, 'speed': 1, 'state': self.State.walk}
-
-    class State(Enum):
-        walk = 1
-        type = 2
+        self.character = {
+            'x': 0,
+            'y': 0,
+            'speed': 1,
+            'state': self.State.walking
+        }
 
     def initializeCube(self):
 
@@ -191,11 +192,11 @@ class GameWidget(QGLWidget):
             self.character['x'] += self.character['speed']
 
         elif key == ord(' ') - 32:
-            if self.character['state'] == self.State.walk:
-                self.character['state'] = self.State.type
+            if self.character['state'] == self.State.walking:
+                self.character['state'] = self.State.typing
 
-            elif self.character['state'] == self.State.type:
-                self.character['state'] = self.State.walk
+            elif self.character['state'] == self.State.typing:
+                self.character['state'] = self.State.walking
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
@@ -281,3 +282,7 @@ class GameWidget(QGLWidget):
 
     def sizeof(self, a):
         return a.itemsize * len(a)
+
+    class State(Enum):
+        walking = 1
+        typing = 2
