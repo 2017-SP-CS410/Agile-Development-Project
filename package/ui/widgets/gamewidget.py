@@ -270,10 +270,9 @@ class GameWidget(QGLWidget):
     #Calculates the value of each letter then returns the sum
     def getLetterValue(word):
         count = 0
+
         for char in word:
-
             for letter in scrabbleVals:
-
                 if char == letter:
                     count += scrabbleVals[letter]
 
