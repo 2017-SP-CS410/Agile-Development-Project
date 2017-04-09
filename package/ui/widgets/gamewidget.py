@@ -4,44 +4,7 @@ from textwrap       import dedent
 from OpenGL.GL      import *
 from OpenGL.GLU     import *
 from PyQt5.QtOpenGL import QGLWidget
-<<<<<<< HEAD
-import math
-
-
-def setCounts(word):
-    vowelCount = 0
-    constCount = 0
-    #add length over 4
-
-
-    for char in word:
-
-
-        if char == 'a' or char == 'e' or char == 'i' or char == 'o' or char == 'u':  # / or use ascii values in array?
-
-            vowelCount += 1
-
-        else:
-
-            constCount += 1
-
-
-    return {'vowelCount': vowelCount, 'constCount': constCount}
-
-
-def setPointValue(word):
-    wordLen = len(word)
-    dif = 0
-    result = setCounts(word)
-    if wordLen > 4:
-        dif = wordLen-4
-
-    pointValue = math.floor(((result['vowelCount'] / result['constCount'])) * 10)
-
-    return pointValue + dif
-=======
 from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
->>>>>>> refs/remotes/origin/master
 
 
 class GameWidget(QGLWidget):
@@ -98,35 +61,35 @@ class GameWidget(QGLWidget):
                 ])
                 self.colors.extend([
                     # top
-                    0,1,0,    
-                    0,1,0,    
-                    0,1,0,    
-                    0,1,0,    
+                    0,1,0,
+                    0,1,0,
+                    0,1,0,
+                    0,1,0,
                     # bottom
-                    0,.5,0,  
-                    0,.5,0,  
-                    0,.5,0,  
-                    0,.5,0,  
+                    0,.5,0,
+                    0,.5,0,
+                    0,.5,0,
+                    0,.5,0,
                     # front
-                    0,0,1,    
-                    0,0,1,    
-                    0,0,1,    
-                    0,0,1,    
+                    0,0,1,
+                    0,0,1,
+                    0,0,1,
+                    0,0,1,
                     # back
-                    0,0,.5,  
-                    0,0,.5,  
-                    0,0,.5,  
+                    0,0,.5,
+                    0,0,.5,
+                    0,0,.5,
                     0,0,.5,
                     # right
-                    1,0,0,    
-                    1,0,0,    
-                    1,0,0,    
-                    1,0,0,    
+                    1,0,0,
+                    1,0,0,
+                    1,0,0,
+                    1,0,0,
                     # left
-                    .5,0,0,  
-                    .5,0,0,  
-                    .5,0,0,  
-                    .5,0,0  
+                    .5,0,0,
+                    .5,0,0,
+                    .5,0,0,
+                    .5,0,0
                 ])
                 self.indices.extend([
                      i+0,  i+1,  i+2,  i+3, self.restart,
@@ -283,44 +246,6 @@ class GameWidget(QGLWidget):
 
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
-<<<<<<< HEAD
-<<<<<<< HEAD
-word = "agile"
-result = (setCounts(word))
-print("Word Value = " + repr(setPointValue(word)) + " vowelCount: "  + repr(result['vowelCount']))
-
-print("why aren't you working!")
-
-=======
-
-    scrabbleVals = {'a': 1, 'b': 3,'c': 3,'d': 2,'e': 1,'f': 4,'g': 2,'h': 4,'i': 1,'j': 8,'k': 5,'l': 1,'m': 3,'n': 1,
-                    'o': 1,'p': 3,'q': 10,'r': 1,'s': 1,'t': 1,'u': 1,'v': 4,'w': 4,'x': 8,'y': 4,'z': 10}
-
-    def getLetterValue(word):
-        count = 0
-        for char in word:
-
-            for letter in GameWidget.scrabbleVals:
-
-                if char == letter:
-                    count += GameWidget.scrabbleVals[letter]
-
-        return count
-    def getFinalValue(word):
-        wordLength = len(word)
-        dif = 0
-        result = GameWidget.getLetterValue(word)
-
-        if wordLength > 4:
-            dif = wordLength -4
-
-        return result + dif
-
-    word = "bingo"
-    print(repr(getLetterValue(word)))
-    print(repr(getFinalValue(word)))
->>>>>>> 49471c08c1dfbb6bf24c90b167e480e637f73ce7
-=======
 
         camera = QMatrix4x4()
         camera.perspective(60, 4.0/3.0, 0.1, 100.0)
@@ -337,4 +262,44 @@ print("why aren't you working!")
 
     def sizeof(self, a):
         return a.itemsize * len(a)
->>>>>>> refs/remotes/origin/master
+
+    scrabbleVals = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2,'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1,
+                    'M': 3,'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8,
+                    'Y': 4, 'Z': 10}
+
+    #Calculates the value of each letter then returns the sum
+    def getLetterValue(word):
+        count = 0
+        for char in word:
+
+            for letter in scrabbleVals:
+
+                if char == letter:
+                    count += scrabbleVals[letter]
+
+        return count
+
+    #Calulates the final value by evaluating word length
+        # then returns the word's letter point value + the word's length point value
+    def getFinalValue(word):
+        wordLength = len(word)
+        dif = 0
+        letterValue = getLetterValue(word)
+
+        if wordLength > 4:
+            dif = wordLength - 4
+
+        return letterValue + dif
+
+    #Grabs words from Txt file and calculates final point values
+        # then pushes them into a second pre-made Txt file then closes both files
+    def changeWordFile(self):
+        unscored = open("word_bank_unscored.txt", 'r+')
+        scored = open("word_bank_scored.txt", 'r+')
+
+        for word in unscored:
+            pointValue = getFinalValue(word)
+            scored.write(word + str(pointValue) + '\n')
+
+        scored.close()
+        unscored.close()
