@@ -1,9 +1,9 @@
 from array          import array
 from ctypes         import c_void_p
-from enum           import Enum
 from textwrap       import dedent
 from OpenGL.GL      import *
 from OpenGL.GLU     import *
+from Player import Player
 from PyQt5.QtOpenGL import QGLWidget
 from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
 
@@ -15,12 +15,7 @@ class GameWidget(QGLWidget):
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
-        self.character = {
-            'x': 0,
-            'y': 0,
-            'speed': 1,
-            'state': self.State.walking
-        }
+        self.character = Player()
 
     def initializeCube(self):
 
@@ -180,23 +175,37 @@ class GameWidget(QGLWidget):
     def keyPressEvent(self, event):
         key = event.text()
         if key == 'w':
-            self.character['y'] -= self.character['speed']
+            self.character.move = Player.Movement.forward
 
         elif key == 'a':
-            self.character['x'] -= self.character['speed']
+            self.character.rotate = Player.Rotate.clockwise
 
         elif key == 's':
-            self.character['y'] += self.character['speed']
+            self.character.move = Player.Movement.backward
 
         elif key == 'd':
-            self.character['x'] += self.character['speed']
+            self.character.rotate = Player.Rotate.counterclockwise
 
         elif key == ' ':
-            if self.character['state'] == self.State.walking:
-                self.character['state'] = self.State.typing
+            if self.character.state == Player.State.moving:
+                self.character.move = Player.State.typing
 
-            elif self.character['state'] == self.State.typing:
-                self.character['state'] = self.State.walking
+            elif self.character.state == Player.State.typing:
+                self.character.move = Player.State.moving
+
+    def keyReleaseEvent(self, event):
+        key = event.text()
+        if key == 'w':
+            self.character.move = Player.Movement.none
+
+        elif key == 'a':
+            self.character.rotate = Player.Rotate.none
+
+        elif key == 's':
+            self.character.move = Player.Movement.none
+
+        elif key == 'd':
+            self.character.rotate = Player.Rotate.none
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
@@ -282,7 +291,3 @@ class GameWidget(QGLWidget):
 
     def sizeof(self, a):
         return a.itemsize * len(a)
-
-    class State(Enum):
-        walking = 1
-        typing = 2
