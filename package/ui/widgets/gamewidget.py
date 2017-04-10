@@ -180,18 +180,18 @@ class GameWidget(QGLWidget):
     def keyPressEvent(self, event):
         key = event.key()
         if key == ord('w') - 32:
-            self.character['y'] += self.character['speed']
+            self.character['y'] -= self.character['speed']
 
         elif key == ord('a') - 32:
             self.character['x'] -= self.character['speed']
 
         elif key == ord('s') - 32:
-            self.character['y'] -= self.character['speed']
+            self.character['y'] += self.character['speed']
 
         elif key == ord('d') - 32:
             self.character['x'] += self.character['speed']
 
-        elif key == ord(' ') - 32:
+        elif key == 32:
             if self.character['state'] == self.State.walking:
                 self.character['state'] = self.State.typing
 
