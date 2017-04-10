@@ -178,20 +178,20 @@ class GameWidget(QGLWidget):
         self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
 
     def keyPressEvent(self, event):
-        key = event.key()
-        if key == ord('w') - 32:
+        key = event.text()
+        if key == 'w':
             self.character['y'] -= self.character['speed']
 
-        elif key == ord('a') - 32:
+        elif key == 'a':
             self.character['x'] -= self.character['speed']
 
-        elif key == ord('s') - 32:
+        elif key == 's':
             self.character['y'] += self.character['speed']
 
-        elif key == ord('d') - 32:
+        elif key == 'd':
             self.character['x'] += self.character['speed']
 
-        elif key == 32:
+        elif key == ' ':
             if self.character['state'] == self.State.walking:
                 self.character['state'] = self.State.typing
 
