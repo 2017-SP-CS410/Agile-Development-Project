@@ -301,4 +301,3 @@ def changeWordFile(self):
         scored.write(word + str(pointValue) + '\n')
 
     scored.close()
-    unscored.close()
