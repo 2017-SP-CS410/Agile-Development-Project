@@ -3,6 +3,7 @@ from ctypes         import c_void_p
 from textwrap       import dedent
 from OpenGL.GL      import *
 from OpenGL.GLU     import *
+from package.ui.widgets.Player import Player
 from PyQt5.QtOpenGL import QGLWidget
 from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
 
@@ -14,7 +15,7 @@ class GameWidget(QGLWidget):
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
-
+        self.character = Player()
 
     def initializeCube(self):
 
@@ -171,14 +172,46 @@ class GameWidget(QGLWidget):
 
         self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
 
+    def keyPressEvent(self, event):
+        key = event.text()
+        if key == 'w':
+            self.character.move = Player.Movement.forward
+
+        elif key == 'a':
+            self.character.rotate = Player.Rotate.clockwise
+
+        elif key == 's':
+            self.character.move = Player.Movement.backward
+
+        elif key == 'd':
+            self.character.rotate = Player.Rotate.counterclockwise
+
+        elif key == ' ':
+            if self.character.state == Player.State.moving:
+                self.character.move = Player.State.typing
+
+            elif self.character.state == Player.State.typing:
+                self.character.move = Player.State.moving
+
+    def keyReleaseEvent(self, event):
+        key = event.text()
+        if key == 'w':
+            self.character.move = Player.Movement.none
+
+        elif key == 'a':
+            self.character.rotate = Player.Rotate.none
+
+        elif key == 's':
+            self.character.move = Player.Movement.none
+
+        elif key == 'd':
+            self.character.rotate = Player.Rotate.none
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
-
-
 
     def loadShaders(self):
         # create a GL Program Object
@@ -226,12 +259,10 @@ class GameWidget(QGLWidget):
 
         return program
 
-
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         #glDrawArrays(GL_TRIANGLE_FAN, 0, len(self.vertices))
         self.renderCube()
-
 
     def renderCube(self):
         glUseProgram(self.cubeProg)
@@ -242,7 +273,6 @@ class GameWidget(QGLWidget):
             GL_UNSIGNED_INT,
             c_void_p(0)
         )
-
 
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
@@ -258,7 +288,6 @@ class GameWidget(QGLWidget):
             GL_FALSE,
             array('f', camera.data()).tostring()
         )
-
 
     def sizeof(self, a):
         return a.itemsize * len(a)
