@@ -9,3 +9,4 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Game name here')
         #self.stacked_widget = QStackedWidget(GameWidget())
         self.setCentralWidget(GameWidget())
+        self.centralWidget().setFocus()

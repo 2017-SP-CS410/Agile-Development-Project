@@ -5,10 +5,9 @@ from OpenGL.GL       import *
 from OpenGL.GLU      import *
 from PyQt5.QtCore    import QBasicTimer
 from PyQt5.QtOpenGL  import QGLWidget
-from PyQt5.QtGui     import QImage, QMatrix4x4, qRgb, QVector3D
+from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
 from PyQt5.QtWidgets import QProgressBar, QPushButton
-
-
+from package.ui.widgets.Player import Player
 
 
 class GameWidget(QGLWidget):
@@ -21,6 +20,7 @@ class GameWidget(QGLWidget):
         self.n = n
         self.restart = 0xFFFFFFFF
         self.score = 0
+        self.character = Player()
 
 
     def initializeCube(self):
@@ -68,35 +68,35 @@ class GameWidget(QGLWidget):
                 ])
                 self.colors.extend([
                     # top
-                    0,1,0,    
-                    0,1,0,    
-                    0,1,0,    
-                    0,1,0,    
+                    0,1,0,
+                    0,1,0,
+                    0,1,0,
+                    0,1,0,
                     # bottom
-                    0,.5,0,  
-                    0,.5,0,  
-                    0,.5,0,  
-                    0,.5,0,  
+                    0,.5,0,
+                    0,.5,0,
+                    0,.5,0,
+                    0,.5,0,
                     # front
-                    0,0,1,    
-                    0,0,1,    
-                    0,0,1,    
-                    0,0,1,    
+                    0,0,1,
+                    0,0,1,
+                    0,0,1,
+                    0,0,1,
                     # back
-                    0,0,.5,  
-                    0,0,.5,  
-                    0,0,.5,  
+                    0,0,.5,
+                    0,0,.5,
+                    0,0,.5,
                     0,0,.5,
                     # right
-                    1,0,0,    
-                    1,0,0,    
-                    1,0,0,    
-                    1,0,0,    
+                    1,0,0,
+                    1,0,0,
+                    1,0,0,
+                    1,0,0,
                     # left
-                    .5,0,0,  
-                    .5,0,0,  
-                    .5,0,0,  
-                    .5,0,0  
+                    .5,0,0,
+                    .5,0,0,
+                    .5,0,0,
+                    .5,0,0
                 ])
                 self.indices.extend([
                      i+0,  i+1,  i+2,  i+3, self.restart,
@@ -178,6 +178,40 @@ class GameWidget(QGLWidget):
 
         self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
 
+    def keyPressEvent(self, event):
+        key = event.text()
+        if key == 'w':
+            self.character.move = Player.Movement.forward
+
+        elif key == 'a':
+            self.character.rotate = Player.Rotate.clockwise
+
+        elif key == 's':
+            self.character.move = Player.Movement.backward
+
+        elif key == 'd':
+            self.character.rotate = Player.Rotate.counterclockwise
+
+        elif key == ' ':
+            if self.character.state == Player.State.moving:
+                self.character.move = Player.State.typing
+
+            elif self.character.state == Player.State.typing:
+                self.character.move = Player.State.moving
+
+    def keyReleaseEvent(self, event):
+        key = event.text()
+        if key == 'w':
+            self.character.move = Player.Movement.none
+
+        elif key == 'a':
+            self.character.rotate = Player.Rotate.none
+
+        elif key == 's':
+            self.character.move = Player.Movement.none
+
+        elif key == 'd':
+            self.character.rotate = Player.Rotate.none
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
@@ -264,12 +298,10 @@ class GameWidget(QGLWidget):
 
         return program
 
-
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         #glDrawArrays(GL_TRIANGLE_FAN, 0, len(self.vertices))
         self.renderCube()
-
 
     def renderCube(self):
         glUseProgram(self.cubeProg)
@@ -280,7 +312,6 @@ class GameWidget(QGLWidget):
             GL_UNSIGNED_INT,
             c_void_p(0)
         )
-
 
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
@@ -297,6 +328,47 @@ class GameWidget(QGLWidget):
             array('f', camera.data()).tostring()
         )
 
-
     def sizeof(self, a):
         return a.itemsize * len(a)
+
+scrabbleVals = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2,'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1,
+                'M': 3,'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8,
+                'Y': 4, 'Z': 10}
+
+#Calculates the value of each letter then returns the sum
+def getLetterValue(word):
+    count = 0
+
+    for char in word:
+        for letter in scrabbleVals:
+            if char == letter:
+                count += scrabbleVals[letter]
+
+    return count
+
+#Calulates the final value by evaluating word length
+    # then returns the word's letter point value + the word's length point value
+def getFinalValue(word):
+    wordLength = len(word)
+    dif = 0
+    letterValue = getLetterValue(word)
+
+    if wordLength > 4:
+        dif = wordLength - 4
+
+    return letterValue + dif
+
+#Grabs words from Txt file and calculates final point values
+    # then pushes them into a second pre-made Txt file then closes both files
+def changeWordFile(self):
+    unscored = open("package/assets/words/word_bank_unscored.txt", 'r+')
+    scored = open("package/assets/words/word_bank_scored.txt", 'r+')
+
+    for word in unscored:
+        pointValue = getFinalValue(word)
+        scored.write(word + str(pointValue) + '\n')
+
+    scored.close()
+    unscored.close()
+
+changeWordFile("")
