@@ -1,13 +1,12 @@
-from array          import array
-from ctypes         import c_void_p
-from textwrap       import dedent
-from OpenGL.GL      import *
-from OpenGL.GLU     import *
-from PyQt5.QtOpenGL import QGLWidget
-from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
-import time
-from tkinter import *
-from PyQt5 import *
+from array           import array
+from ctypes          import c_void_p
+from textwrap        import dedent
+from OpenGL.GL       import *
+from OpenGL.GLU      import *
+from PyQt5.QtCore    import QBasicTimer
+from PyQt5.QtOpenGL  import QGLWidget
+from PyQt5.QtGui     import QImage, QMatrix4x4, qRgb, QVector3D
+from PyQt5.QtWidgets import QProgressBar, QPushButton
 
 
 
@@ -180,20 +179,43 @@ class GameWidget(QGLWidget):
         self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
 
 
-
-
-
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
+        self.initializeTimer()
+        self.makeScoreLabel()
 
-        l = QtWidgets.QLabel()
 
-        l.setText("Hello")
-        l.
+    def initializeTimer(self):
+        self.pbar = QProgressBar(self)
+        self.pbar.setGeometry(30, 40, 200, 25)
+        self.timer = QBasicTimer()
+        self.timer.start(1200, self)
+        self.step = 100
+        self.pbar.setValue(self.step)
+        self.btn = QPushButton("Time is: " + str(int(self.step * 1.2)), self)
+        self.btn.setStyleSheet("background-color: black; color: red;")
+        self.btn.move(500, 10)
+        self.show()
 
+
+    def timerEvent(self, e):
+        if self.step <= 0:
+            self.timer.stop()
+            return
+        self.step -= 1
+        self.score += 1
+        self.btn.setText("Time is: " + str(int(self.step * 1.2)))
+        self.scoreLabel.setText("Score: " + str(int(self.score)))
+        self.pbar.setValue(self.step)
+
+
+    def makeScoreLabel(self):
+        self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
+        self.scoreLabel.setStyleSheet("background-color: black; color: red;")
+        self.scoreLabel.move(200, 10)
 
 
     def loadShaders(self):
@@ -241,29 +263,6 @@ class GameWidget(QGLWidget):
         glUseProgram(program)
 
         return program
-
-    def makeScoreLabel(self):
-        root = Tk()
-        label = Label(root, text = "score ", justify = LEFT, fg = "red")
-        #label.update(self.score)
-        #label.place(x=5, y=5)
-       # label.configure(foreground="red")
-        label.pack()
-
-        root.mainloop()
-
-
-    def makeTimerLabel(self, t):
-        root = Tk()
-        while t:
-            self.score +=1
-            mins, secs = divmod(t, 60)
-            timeformat = '{:02d}:{:02d}'.format(mins, secs)
-            label = Label(root, text = timeformat, justify = CENTER, padx = 10)
-            time.sleep(1)
-            t -= 1
-            label.pack()
-        #root.mainloop()
 
 
     def paintGL(self):
