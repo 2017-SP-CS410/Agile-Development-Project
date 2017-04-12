@@ -5,15 +5,23 @@ from OpenGL.GL      import *
 from OpenGL.GLU     import *
 from PyQt5.QtOpenGL import QGLWidget
 from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
+import time
+from tkinter import *
+from PyQt5 import *
+
+
 
 
 class GameWidget(QGLWidget):
+
+
 
     def __init__(self, n=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
+        self.score = 0
 
 
     def initializeCube(self):
@@ -172,11 +180,19 @@ class GameWidget(QGLWidget):
         self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
 
 
+
+
+
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
+
+        l = QtWidgets.QLabel()
+
+        l.setText("Hello")
+        l.
 
 
 
@@ -225,6 +241,29 @@ class GameWidget(QGLWidget):
         glUseProgram(program)
 
         return program
+
+    def makeScoreLabel(self):
+        root = Tk()
+        label = Label(root, text = "score ", justify = LEFT, fg = "red")
+        #label.update(self.score)
+        #label.place(x=5, y=5)
+       # label.configure(foreground="red")
+        label.pack()
+
+        root.mainloop()
+
+
+    def makeTimerLabel(self, t):
+        root = Tk()
+        while t:
+            self.score +=1
+            mins, secs = divmod(t, 60)
+            timeformat = '{:02d}:{:02d}'.format(mins, secs)
+            label = Label(root, text = timeformat, justify = CENTER, padx = 10)
+            time.sleep(1)
+            t -= 1
+            label.pack()
+        #root.mainloop()
 
 
     def paintGL(self):
