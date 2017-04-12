@@ -293,8 +293,8 @@ def getFinalValue(word):
 #Grabs words from Txt file and calculates final point values
     # then pushes them into a second pre-made Txt file then closes both files
 def changeWordFile(self):
-    unscored = open("word_bank_unscored.txt", 'r+')
-    scored = open("word_bank_scored.txt", 'r+')
+    unscored = open("package/assets/words/word_bank_unscored.txt", 'r+')
+    scored = open("package/assets/words/word_bank_scored.txt", 'r+')
 
     for word in unscored:
         pointValue = getFinalValue(word)
