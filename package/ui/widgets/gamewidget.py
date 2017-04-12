@@ -3,7 +3,7 @@ from ctypes         import c_void_p
 from textwrap       import dedent
 from OpenGL.GL      import *
 from OpenGL.GLU     import *
-from Player import Player
+from package.ui.widgets.Player import Player
 from PyQt5.QtOpenGL import QGLWidget
 from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
 
