@@ -7,12 +7,10 @@ from PyQt5.QtCore    import QBasicTimer
 from PyQt5.QtOpenGL  import QGLWidget
 from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
 from PyQt5.QtWidgets import QProgressBar, QPushButton
-from package.ui.widgets.Player import Player
+from .objects        import Player, Movement, Rotate, State
 
 
 class GameWidget(QGLWidget):
-
-
 
     def __init__(self, n=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -20,10 +18,9 @@ class GameWidget(QGLWidget):
         self.n = n
         self.restart = 0xFFFFFFFF
         self.score = 0
-        self.character = Player()
 
 
-    def initializeCube(self):
+    def initializeGround(self):
 
         self.vertices = array('f')
         self.colors = array('f')
@@ -181,43 +178,44 @@ class GameWidget(QGLWidget):
     def keyPressEvent(self, event):
         key = event.text()
         if key == 'w':
-            self.character.move = Player.Movement.forward
+            self.character.move = Movement.forward
 
         elif key == 'a':
-            self.character.rotate = Player.Rotate.clockwise
+            self.character.rotate = Rotate.right
 
         elif key == 's':
-            self.character.move = Player.Movement.backward
+            self.character.move = Movement.backward
 
         elif key == 'd':
-            self.character.rotate = Player.Rotate.counterclockwise
+            self.character.rotate = Rotate.left
 
         elif key == ' ':
-            if self.character.state == Player.State.moving:
-                self.character.move = Player.State.typing
+            if self.character.state == State.moving:
+                self.character.move = State.typing
 
-            elif self.character.state == Player.State.typing:
-                self.character.move = Player.State.moving
+            elif self.character.state == State.typing:
+                self.character.move = State.moving
 
     def keyReleaseEvent(self, event):
         key = event.text()
         if key == 'w':
-            self.character.move = Player.Movement.none
+            self.character.move = Movement.none
 
         elif key == 'a':
-            self.character.rotate = Player.Rotate.none
+            self.character.rotate = Rotate.none
 
         elif key == 's':
-            self.character.move = Player.Movement.none
+            self.character.move = Movement.none
 
         elif key == 'd':
-            self.character.rotate = Player.Rotate.none
+            self.character.rotate = Rotate.none
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
-        self.initializeCube()
+        self.initializeGround()
+        self.character = Player()
         self.initializeTimer()
         self.makeScoreLabel()
 
