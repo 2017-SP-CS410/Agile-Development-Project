@@ -218,32 +218,40 @@ class GameWidget(QGLWidget):
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
+        self.clockStart()
         self.initializeTimer()
         self.makeScoreLabel()
 
 
     def initializeTimer(self):
-        self.pbar = QProgressBar(self)
-        self.pbar.setGeometry(30, 40, 200, 25)
-        self.timer = QBasicTimer()
-        self.timer.start(1200, self)
-        self.step = 100
-        self.pbar.setValue(self.step)
-        self.btn = QPushButton("Time is: " + str(int(self.step * 1.2)), self)
-        self.btn.setStyleSheet("background-color: black; color: red;")
-        self.btn.move(500, 10)
+        self.pbar = QProgressBar(self)  # This creates the progress bar
+        self.pbar.setGeometry(12, 12, 200, 25)  # This sets the location and the size of the progress bar of the progress bar
+        self.pbar.setValue(int(self.step / 1.2))  # This associates the step with the progress bar
+
+        self.btn = QPushButton("Time is: " + str(int(self.step)), self)  # !!!!!!!!! NOTICE, these are Buttons not labels!!!! They are larger than just the text
+        self.btn.setStyleSheet("background-color: black; color: red")  # Sets background color of button to black and text to red
+        self.btn.move(500, 10)  # Moves the location of the button
+
         self.show()
+
+    def clockStart(self):
+        self.timer = QBasicTimer()  # This creates a timer
+        self.timer.start(50/3, self)  # starts the timer
+        self.step = 120
 
 
     def timerEvent(self, e):
         if self.step <= 0:
             self.timer.stop()
             return
-        self.step -= 1
-        self.score += 1
-        self.btn.setText("Time is: " + str(int(self.step * 1.2)))
+
+        self.step -= 1/60
+        self.score = self.score + 1
+
+        self.btn.setText("Time is: " + str(int((self.step))))
         self.scoreLabel.setText("Score: " + str(int(self.score)))
-        self.pbar.setValue(self.step)
+
+        self.pbar.setValue(int(self.step/1.2))
 
 
     def makeScoreLabel(self):
