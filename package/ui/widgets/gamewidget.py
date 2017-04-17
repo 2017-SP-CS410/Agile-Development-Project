@@ -232,7 +232,6 @@ class GameWidget(QGLWidget):
         self.btn.move(500, 10)
         self.show()
 
-
     def timerEvent(self, e):
         if self.step <= 0:
             self.timer.stop()
@@ -242,7 +241,7 @@ class GameWidget(QGLWidget):
         self.btn.setText("Time is: " + str(int(self.step * 1.2)))
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(self.step)
-
+        self.character.move()
 
     def makeScoreLabel(self):
         self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
