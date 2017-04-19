@@ -6,7 +6,7 @@ from OpenGL.GLU      import *
 from PyQt5.QtCore    import QBasicTimer
 from PyQt5.QtOpenGL  import QGLWidget
 from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
-from PyQt5.QtWidgets import QProgressBar, QPushButton
+from PyQt5.QtWidgets import QProgressBar, QPushButton, QLineEdit
 from package.ui.widgets.Player import Player
 
 
@@ -218,6 +218,8 @@ class GameWidget(QGLWidget):
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
+        self.clockStart()
+        self.typeBox()
         self.initializeTimer()
         self.makeScoreLabel()
 
@@ -225,26 +227,48 @@ class GameWidget(QGLWidget):
     def initializeTimer(self):
         self.pbar = QProgressBar(self)
         self.pbar.setGeometry(30, 40, 200, 25)
-        self.timer = QBasicTimer()
-        self.timer.start(1200, self)
-        self.step = 100
-        self.pbar.setValue(self.step)
-        self.btn = QPushButton("Time is: " + str(int(self.step * 1.2)), self)
+
+        self.pbar.setValue(int(self.step/1.2))
+        self.btn = QPushButton("Time is: " + str(int(self.step)), self)
         self.btn.setStyleSheet("background-color: black; color: red;")
         self.btn.move(500, 10)
         self.show()
+
 
 
     def timerEvent(self, e):
         if self.step <= 0:
             self.timer.stop()
             return
-        self.step -= 1
-        self.score += 1
-        self.btn.setText("Time is: " + str(int(self.step * 1.2)))
-        self.scoreLabel.setText("Score: " + str(int(self.score)))
-        self.pbar.setValue(self.step)
 
+        self.step -= 1 / 60
+        self.score = self.score + 1
+        if (self.readbox.text() == self.textbox.text()):
+            self.textbox.setText("")
+
+        self.btn.setText("Time is: " + str(int((self.step))))
+        self.scoreLabel.setText("Score: " + str(int(self.score)))
+
+        self.pbar.setValue(int(self.step / 1.2))
+
+    def typeBox(self):
+        self.readbox = QLineEdit(self)
+        self.readbox.setText("fuck")
+        self.readbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.readbox.setReadOnly(True)
+        self.readbox.move(0, 420)
+        self.readbox.resize(640, 30)
+
+        self.textbox = QLineEdit(self)
+        self.textbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.textbox.move(0, 450)
+        self.textbox.setFocus()
+        self.textbox.resize(640, 30)
+
+    def clockStart(self):
+        self.timer = QBasicTimer()
+        self.timer.start(50/3, self)
+        self.step = 120
 
     def makeScoreLabel(self):
         self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
