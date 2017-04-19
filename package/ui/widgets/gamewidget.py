@@ -1,22 +1,29 @@
-from array          import array
-from ctypes         import c_void_p
-from textwrap       import dedent
-from OpenGL.GL      import *
-from OpenGL.GLU     import *
-from package.ui.widgets.Player import Player
-from PyQt5.QtOpenGL import QGLWidget
-from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
 import random
+from array           import array
+from ctypes          import c_void_p
+from textwrap        import dedent
+from OpenGL.GL       import *
+from OpenGL.GLU      import *
+from PyQt5.QtCore    import QBasicTimer
+from PyQt5.QtOpenGL  import QGLWidget
+from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
+from PyQt5.QtWidgets import QProgressBar, QPushButton
+from package.ui.widgets.Player import Player
+
 
 
 class GameWidget(QGLWidget):
+
+
 
     def __init__(self, n=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
+        self.score = 0
         self.character = Player()
+
 
     def initializeCube(self):
 
@@ -213,6 +220,39 @@ class GameWidget(QGLWidget):
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
+        self.initializeTimer()
+        self.makeScoreLabel()
+
+
+    def initializeTimer(self):
+        self.pbar = QProgressBar(self)
+        self.pbar.setGeometry(30, 40, 200, 25)
+        self.timer = QBasicTimer()
+        self.timer.start(1200, self)
+        self.step = 100
+        self.pbar.setValue(self.step)
+        self.btn = QPushButton("Time is: " + str(int(self.step * 1.2)), self)
+        self.btn.setStyleSheet("background-color: black; color: red;")
+        self.btn.move(500, 10)
+        self.show()
+
+
+    def timerEvent(self, e):
+        if self.step <= 0:
+            self.timer.stop()
+            return
+        self.step -= 1
+        self.score += 1
+        self.btn.setText("Time is: " + str(int(self.step * 1.2)))
+        self.scoreLabel.setText("Score: " + str(int(self.score)))
+        self.pbar.setValue(self.step)
+
+
+    def makeScoreLabel(self):
+        self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
+        self.scoreLabel.setStyleSheet("background-color: black; color: red;")
+        self.scoreLabel.move(200, 10)
+
 
     def loadShaders(self):
         # create a GL Program Object
