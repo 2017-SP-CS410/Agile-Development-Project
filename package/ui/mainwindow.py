@@ -1,3 +1,5 @@
+from PyQt5 import QtOpenGL
+
 from PyQt5.QtWidgets    import QMainWindow, QStackedWidget
 from package.ui.widgets import GameWidget
 
@@ -8,5 +10,8 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle('Game name here')
         #self.stacked_widget = QStackedWidget(GameWidget())
-        self.setCentralWidget(GameWidget())
+        glformat = QtOpenGL.QGLFormat()
+        glformat.setVersion(3, 3)
+        glformat.setProfile(QtOpenGL.QGLFormat.CoreProfile)
+        self.setCentralWidget(GameWidget(glformat))
         self.centralWidget().setFocus()

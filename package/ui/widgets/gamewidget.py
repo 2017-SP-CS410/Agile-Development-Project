@@ -14,7 +14,7 @@ class GameWidget(QGLWidget):
 
 
 
-    def __init__(self, n=10, *args, **kwargs):
+    def __init__(self, *args, n=10, **kwargs):
         super().__init__(*args, **kwargs)
         self.setMinimumSize(640, 480)
         self.n = n
@@ -279,11 +279,14 @@ class GameWidget(QGLWidget):
         # fragment shader
         fs_source = dedent("""
             #version 330
+
+            out vec4 outColor;
             in vec3 fcolor;
+            
             void main()
             {
-               gl_FragColor = vec4(fcolor, 1.0);
-            }\
+               outColor = vec4(fcolor, 1.0);
+            }
         """)
         fs = glCreateShader(GL_FRAGMENT_SHADER)
         glShaderSource(fs, fs_source)
@@ -371,4 +374,4 @@ def changeWordFile(self):
     scored.close()
     unscored.close()
 
-changeWordFile("")
+# changeWordFile("")
