@@ -1,3 +1,4 @@
+import os
 import random
 from array           import array
 from ctypes          import c_void_p
@@ -23,7 +24,47 @@ class GameWidget(QGLWidget):
         self.restart = 0xFFFFFFFF
         self.score = 0
         self.character = Player()
+        # package_directory = os.path.dirname(os.path.abspath(__file__))
+        # self.word_bank_unscored = os.path.join(package_directory, '..', '..','assets','words', 'word_bank_unscored.txt')
+        # self.wordList = self.makeWordList()
 
+    def makeWordList(self):
+        list = []
+        #unscored = open(self.word_bank_unscored, 'r+')
+
+        for line in self.word_bank_unscored:
+            list.append(line)
+        return list
+
+    def getWordAndValue(self):
+        ran = random.randint(0, len(self.wordList))
+        word = self.wordList[ran]
+        value = self.getFinalValue(word)
+        return word, value
+
+    def getLetterValue(word):
+        scrabbleVals = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1,
+                        'M': 3, 'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8,
+                        'Y': 4, 'Z': 10}
+        # Dictionary of scrable values
+        count = 0
+        for char in word:
+            for letter in scrabbleVals:
+                if char == letter:
+                    count += scrabbleVals[letter]
+        return count
+
+
+        # getFinalValue calulates the final value by evaluating word length
+        # then returns the word's letter point value + the word's length point value
+
+    def getFinalValue(self, word):
+        wordLength = len(word)
+        dif = 0
+        letterValue = self.getLetterValue(word)
+        if wordLength > 4:
+            dif = wordLength - 4
+        return letterValue + dif
 
     def initializeCube(self):
 
@@ -226,6 +267,10 @@ class GameWidget(QGLWidget):
         self.makeScoreLabel()
 
 
+
+
+
+
     def initializeTimer(self):
         self.pbar = QProgressBar(self)
         self.pbar.setGeometry(30, 40, 200, 25)
@@ -253,9 +298,11 @@ class GameWidget(QGLWidget):
 
         self.pbar.setValue(int(self.step / 1.2))
 
+
     def typeBox(self):
         self.readbox = QLineEdit(self)
-        self.readbox.setText("fuck")
+        word, value = self.getWordAndValue()
+        self.readbox.setText(word)
         self.readbox.setStyleSheet("background-color: black; color: red; border-color: black;")
         self.readbox.setReadOnly(True)
         self.readbox.move(0, 420)

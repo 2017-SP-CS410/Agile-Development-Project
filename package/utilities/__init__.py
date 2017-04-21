@@ -1,3 +1,3 @@
-#from package.utilities.word import Word
+from package.utilities.Word import Word
 
-#__all__ = ['Word']
+__all__ = ['Word']
