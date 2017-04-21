@@ -14,6 +14,8 @@ from package.utilities.word import getFinalValue, makeWordList
 
 
 
+
+
 class GameWidget(QGLWidget):
 
 
@@ -25,8 +27,6 @@ class GameWidget(QGLWidget):
         self.restart = 0xFFFFFFFF
         self.score = 0
         self.character = Player()
-        # package_directory = os.path.dirname(os.path.abspath(__file__))
-        # self.word_bank_unscored = os.path.join(package_directory, '..', '..','assets','words', 'word_bank_unscored.txt')
         self.wordList = makeWordList()
 
 
@@ -255,6 +255,9 @@ class GameWidget(QGLWidget):
         self.scoreLabel.setText("Score: " + str(int(self.score)))
 
         self.pbar.setValue(int(self.step / 1.2))
+
+
+
 
 
     def typeBox(self):
