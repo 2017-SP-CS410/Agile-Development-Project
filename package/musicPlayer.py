@@ -8,7 +8,7 @@ import sys
 
 app = QCoreApplication(sys.argv)
 
-sound = QSound("/home/asher/Agile-Development-Project/package/theme.wav")
+sound = QSound("../package/theme.wav")
 
 sound.setLoops(QSound.Infinite)
 

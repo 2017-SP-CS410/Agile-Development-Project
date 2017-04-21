@@ -1,3 +1,4 @@
+import os
 from array          import array
 from ctypes         import c_void_p
 from textwrap       import dedent
@@ -5,7 +6,7 @@ from OpenGL.GL      import *
 from OpenGL.GLU     import *
 from PyQt5.QtOpenGL import QGLWidget
 from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
-
+from PyQt5.QtMultimedia import QSound
 
 class GameWidget(QGLWidget):
 
@@ -14,6 +15,12 @@ class GameWidget(QGLWidget):
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
+        package_directory = os.path.dirname(os.path.abspath(__file__))
+        wav_file = os.path.join(package_directory, '..', '..', 'theme.wav')
+        print(wav_file)
+        self.sound = QSound(wav_file)
+        self.sound.setLoops(QSound.Infinite)
+
         
 
 
@@ -235,9 +242,9 @@ class GameWidget(QGLWidget):
         self.renderCube()
 
     def playMusic(self):
-        sound = QSound("/home/asher/Agile-Development-Project/package/theme.wav")
-        sound.setLoops(QSound.Infinite)
-        sound.play()
+
+        self.sound.play()
+        #self.playMusic()
 
     def renderCube(self):
         if hasattr(self, 'cubeProg'):
