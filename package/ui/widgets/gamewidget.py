@@ -1,3 +1,4 @@
+import random
 from array           import array
 from collections     import namedtuple
 from ctypes          import c_void_p
@@ -138,40 +139,35 @@ class GameWidget(QGLWidget):
         self.playerProjMatLoc = glGetUniformLocation(self.playerProgram, "projection")
         self.modelModelMatLoc = glGetUniformLocation(self.playerProgram, "model")
 
+
     def keyPressEvent(self, event):
         key = event.text()
         if key == 'w':
             self.character.move = Movement.forward
-
         elif key == 'a':
             self.character.rotate = Rotate.right
-
         elif key == 's':
             self.character.move = Movement.backward
-
         elif key == 'd':
             self.character.rotate = Rotate.left
-
         elif key == ' ':
             if self.character.state == State.moving:
                 self.character.move = State.typing
-
             elif self.character.state == State.typing:
                 self.character.move = State.moving
+
 
     def keyReleaseEvent(self, event):
         key = event.text()
         if key == 'w':
             self.character.move = Movement.none
-
         elif key == 'a':
             self.character.rotate = Rotate.none
-
         elif key == 's':
             self.character.move = Movement.none
-
         elif key == 'd':
             self.character.rotate = Rotate.none
+
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
@@ -302,6 +298,7 @@ class GameWidget(QGLWidget):
         glUseProgram(program)
 
         return program
+
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
