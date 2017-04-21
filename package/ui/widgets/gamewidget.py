@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import os
 from array          import array
 from ctypes         import c_void_p
@@ -7,14 +8,30 @@ from OpenGL.GLU     import *
 from PyQt5.QtOpenGL import QGLWidget
 from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
 from PyQt5.QtMultimedia import QSound
+=======
+from array           import array
+from ctypes          import c_void_p
+from textwrap        import dedent
+from OpenGL.GL       import *
+from OpenGL.GLU      import *
+from PyQt5.QtCore    import QBasicTimer
+from PyQt5.QtOpenGL  import QGLWidget
+from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
+from PyQt5.QtWidgets import QProgressBar, QPushButton
+from package.ui.widgets.Player import Player
+
+>>>>>>> refs/remotes/origin/master
 
 class GameWidget(QGLWidget):
+
+
 
     def __init__(self, n=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
+<<<<<<< HEAD
         package_directory = os.path.dirname(os.path.abspath(__file__))
         wav_file = os.path.join(package_directory, '..', '..', 'theme.wav')
         print(wav_file)
@@ -22,6 +39,10 @@ class GameWidget(QGLWidget):
         self.sound.setLoops(QSound.Infinite)
 
         
+=======
+        self.score = 0
+        self.character = Player()
+>>>>>>> refs/remotes/origin/master
 
 
     def initializeCube(self):
@@ -69,35 +90,35 @@ class GameWidget(QGLWidget):
                 ])
                 self.colors.extend([
                     # top
-                    0,1,0,    
-                    0,1,0,    
-                    0,1,0,    
-                    0,1,0,    
+                    0,1,0,
+                    0,1,0,
+                    0,1,0,
+                    0,1,0,
                     # bottom
-                    0,.5,0,  
-                    0,.5,0,  
-                    0,.5,0,  
-                    0,.5,0,  
+                    0,.5,0,
+                    0,.5,0,
+                    0,.5,0,
+                    0,.5,0,
                     # front
-                    0,0,1,    
-                    0,0,1,    
-                    0,0,1,    
-                    0,0,1,    
+                    0,0,1,
+                    0,0,1,
+                    0,0,1,
+                    0,0,1,
                     # back
-                    0,0,.5,  
-                    0,0,.5,  
-                    0,0,.5,  
+                    0,0,.5,
+                    0,0,.5,
+                    0,0,.5,
                     0,0,.5,
                     # right
-                    1,0,0,    
-                    1,0,0,    
-                    1,0,0,    
-                    1,0,0,    
+                    1,0,0,
+                    1,0,0,
+                    1,0,0,
+                    1,0,0,
                     # left
-                    .5,0,0,  
-                    .5,0,0,  
-                    .5,0,0,  
-                    .5,0,0  
+                    .5,0,0,
+                    .5,0,0,
+                    .5,0,0,
+                    .5,0,0
                 ])
                 self.indices.extend([
                      i+0,  i+1,  i+2,  i+3, self.restart,
@@ -179,14 +200,82 @@ class GameWidget(QGLWidget):
 
         self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
 
+    def keyPressEvent(self, event):
+        key = event.text()
+        if key == 'w':
+            self.character.move = Player.Movement.forward
+
+        elif key == 'a':
+            self.character.rotate = Player.Rotate.clockwise
+
+        elif key == 's':
+            self.character.move = Player.Movement.backward
+
+        elif key == 'd':
+            self.character.rotate = Player.Rotate.counterclockwise
+
+        elif key == ' ':
+            if self.character.state == Player.State.moving:
+                self.character.move = Player.State.typing
+
+            elif self.character.state == Player.State.typing:
+                self.character.move = Player.State.moving
+
+    def keyReleaseEvent(self, event):
+        key = event.text()
+        if key == 'w':
+            self.character.move = Player.Movement.none
+
+        elif key == 'a':
+            self.character.rotate = Player.Rotate.none
+
+        elif key == 's':
+            self.character.move = Player.Movement.none
+
+        elif key == 'd':
+            self.character.rotate = Player.Rotate.none
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
+<<<<<<< HEAD
         self.playMusic()
+=======
+        self.initializeTimer()
+        self.makeScoreLabel()
 
+
+    def initializeTimer(self):
+        self.pbar = QProgressBar(self)
+        self.pbar.setGeometry(30, 40, 200, 25)
+        self.timer = QBasicTimer()
+        self.timer.start(1200, self)
+        self.step = 100
+        self.pbar.setValue(self.step)
+        self.btn = QPushButton("Time is: " + str(int(self.step * 1.2)), self)
+        self.btn.setStyleSheet("background-color: black; color: red;")
+        self.btn.move(500, 10)
+        self.show()
+
+>>>>>>> refs/remotes/origin/master
+
+    def timerEvent(self, e):
+        if self.step <= 0:
+            self.timer.stop()
+            return
+        self.step -= 1
+        self.score += 1
+        self.btn.setText("Time is: " + str(int(self.step * 1.2)))
+        self.scoreLabel.setText("Score: " + str(int(self.score)))
+        self.pbar.setValue(self.step)
+
+
+    def makeScoreLabel(self):
+        self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
+        self.scoreLabel.setStyleSheet("background-color: black; color: red;")
+        self.scoreLabel.move(200, 10)
 
 
     def loadShaders(self):
@@ -235,17 +324,19 @@ class GameWidget(QGLWidget):
 
         return program
 
-
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         #glDrawArrays(GL_TRIANGLE_FAN, 0, len(self.vertices))
         self.renderCube()
 
+<<<<<<< HEAD
     def playMusic(self):
 
         self.sound.play()
         #self.playMusic()
 
+=======
+>>>>>>> refs/remotes/origin/master
     def renderCube(self):
         if hasattr(self, 'cubeProg'):
             glUseProgram(self.cubeProg)
@@ -256,7 +347,6 @@ class GameWidget(QGLWidget):
                 GL_UNSIGNED_INT,
                 c_void_p(0)
             )
-
 
     def resizeGL(self, width, height):
         if hasattr(self, 'cubeProg'):
@@ -274,6 +364,47 @@ class GameWidget(QGLWidget):
                 array('f', camera.data()).tostring()
             )
 
-
     def sizeof(self, a):
         return a.itemsize * len(a)
+
+scrabbleVals = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2,'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1,
+                'M': 3,'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8,
+                'Y': 4, 'Z': 10}
+
+#Calculates the value of each letter then returns the sum
+def getLetterValue(word):
+    count = 0
+
+    for char in word:
+        for letter in scrabbleVals:
+            if char == letter:
+                count += scrabbleVals[letter]
+
+    return count
+
+#Calulates the final value by evaluating word length
+    # then returns the word's letter point value + the word's length point value
+def getFinalValue(word):
+    wordLength = len(word)
+    dif = 0
+    letterValue = getLetterValue(word)
+
+    if wordLength > 4:
+        dif = wordLength - 4
+
+    return letterValue + dif
+
+#Grabs words from Txt file and calculates final point values
+    # then pushes them into a second pre-made Txt file then closes both files
+def changeWordFile(self):
+    unscored = open("package/assets/words/word_bank_unscored.txt", 'r+')
+    scored = open("package/assets/words/word_bank_scored.txt", 'r+')
+
+    for word in unscored:
+        pointValue = getFinalValue(word)
+        scored.write(word + str(pointValue) + '\n')
+
+    scored.close()
+    unscored.close()
+
+changeWordFile("")
