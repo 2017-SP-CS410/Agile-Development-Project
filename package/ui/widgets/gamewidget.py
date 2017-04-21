@@ -1,4 +1,5 @@
 from array           import array
+from collections     import namedtuple
 from ctypes          import c_void_p
 from textwrap        import dedent
 from OpenGL.GL       import *
@@ -7,12 +8,12 @@ from PyQt5.QtCore    import QBasicTimer
 from PyQt5.QtOpenGL  import QGLWidget
 from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
 from PyQt5.QtWidgets import QProgressBar, QPushButton
-from .objects        import Player, Movement, Rotate, State
+from .objects        import Ground, Movement, Player, Rotate, State
 
 
 class GameWidget(QGLWidget):
 
-    def __init__(self, n=10, *args, **kwargs):
+    def __init__(self, n=20, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setMinimumSize(640, 480)
         self.n = n
@@ -22,136 +23,48 @@ class GameWidget(QGLWidget):
 
     def initializeGround(self):
 
-        self.vertices = array('f')
-        self.colors = array('f')
-        self.indices = array('I')
-
-        half_n = self.n / 2
-        x = y = -half_n
-        i = 0
-        while x < half_n:
-            while y < half_n:
-                self.vertices.extend([
-                    # +y face
-                    x+1, y+1,  0,  # 0
-                    x+1, y+1, -1,  # 1
-                      x, y+1, -1,  # 2
-                      x, y+1,  0,  # 3
-                    # -y face
-                    x+1, y,  0,  # 4
-                      x, y,  0,  # 5
-                      x, y, -1,  # 6
-                    x+1, y, -1,  # 7
-                    # top
-                    x+1, y+1, 0,  # 8
-                      x, y+1, 0,  # 9
-                      x,   y, 0,  # 10
-                    x+1,   y, 0,  # 11
-                    # bottom
-                      x,   y, -1,  # 12
-                      x, y+1, -1,  # 13
-                    x+1, y+1, -1,  # 14
-                    x+1,   y, -1,  # 15
-                    # +x face
-                    x+1,   y,  0,  # 16
-                    x+1,   y, -1,  # 17
-                    x+1, y+1, -1,  # 18
-                    x+1, y+1,  0,  # 19
-                    # -x face
-                    x,   y,  0,  # 20
-                    x, y+1,  0,  # 21
-                    x, y+1, -1,  # 22
-                    x,   y, -1   # 23
-                ])
-                self.colors.extend([
-                    # top
-                    0,1,0,
-                    0,1,0,
-                    0,1,0,
-                    0,1,0,
-                    # bottom
-                    0,.5,0,
-                    0,.5,0,
-                    0,.5,0,
-                    0,.5,0,
-                    # front
-                    0,0,1,
-                    0,0,1,
-                    0,0,1,
-                    0,0,1,
-                    # back
-                    0,0,.5,
-                    0,0,.5,
-                    0,0,.5,
-                    0,0,.5,
-                    # right
-                    1,0,0,
-                    1,0,0,
-                    1,0,0,
-                    1,0,0,
-                    # left
-                    .5,0,0,
-                    .5,0,0,
-                    .5,0,0,
-                    .5,0,0
-                ])
-                self.indices.extend([
-                     i+0,  i+1,  i+2,  i+3, self.restart,
-                     i+4,  i+5,  i+6,  i+7, self.restart,
-                     i+8,  i+9, i+10, i+11, self.restart,
-                    i+12, i+13, i+14, i+15, self.restart,
-                    i+16, i+17, i+18, i+19, self.restart,
-                    i+20, i+21, i+22, i+23, self.restart
-                ])
-                y += 1
-                i += 24
-            y = -half_n
-            x += 1
-        self.indices.pop()
+        self.ground = Ground(self.n, self.restart)
 
         # create a new Vertex Array Object on the GPU which saves the attribute
         # layout of our vertices
-        self.cubeVao = glGenVertexArrays(1)
-        glBindVertexArray(self.cubeVao)
+        self.groundVao = glGenVertexArrays(1)
+        glBindVertexArray(self.groundVao)
 
         # create a buffer on the GPU for position and color data
-        vertexBuffer = glGenBuffers(1)
-        colorBuffer = glGenBuffers(1)
-        indexBuffer = glGenBuffers(1)
+        vertexBuffer, colorBuffer, indexBuffer = glGenBuffers(3)
 
         # upload the data to the GPU, storing it in the buffer we just created
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
         glBufferData(
             GL_ARRAY_BUFFER,
-            self.sizeof(self.vertices),
-            self.vertices.tostring(),
+            self.sizeof(self.ground.vertices),
+            self.ground.vertices.tostring(),
             GL_STATIC_DRAW
         )
         glBindBuffer(GL_ARRAY_BUFFER, colorBuffer)
         glBufferData(
             GL_ARRAY_BUFFER,
-            self.sizeof(self.colors),
-            self.colors.tostring(),
+            self.sizeof(self.ground.colors),
+            self.ground.colors.tostring(),
             GL_STATIC_DRAW
         )
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer)
         glBufferData(
             GL_ELEMENT_ARRAY_BUFFER,
-            self.sizeof(self.indices),
-            self.indices.tostring(),
+            self.sizeof(self.ground.indices),
+            self.ground.indices.tostring(),
             GL_STATIC_DRAW
         )
 
         # load our vertex and fragment shaders into a program object on the GPU
-        program = self.loadShaders()
-        glUseProgram(program)
-        self.cubeProg = program
+        self.groundProgram = self.loadGroundShaders()
+        glUseProgram(self.groundProgram)
 
         # bind the attribute "position" (defined in our vertex shader) to the
         # currently bound buffer object, which contains our position data
         # this information is stored in our vertex array object
         glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
-        position = glGetAttribLocation(program, 'position')
+        position = glGetAttribLocation(self.groundProgram, 'position')
         glEnableVertexAttribArray(position)
         glVertexAttribPointer(
             position,
@@ -162,7 +75,7 @@ class GameWidget(QGLWidget):
             c_void_p(0)
         )
         glBindBuffer(GL_ARRAY_BUFFER, colorBuffer)
-        color = glGetAttribLocation(program, 'color')
+        color = glGetAttribLocation(self.groundProgram, 'color')
         glEnableVertexAttribArray(color)
         glVertexAttribPointer(
             color,
@@ -173,7 +86,57 @@ class GameWidget(QGLWidget):
             c_void_p(0)
         )
 
-        self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
+        self.groundProjMatLoc = glGetUniformLocation(self.groundProgram, "projection")
+
+
+    def initializePlayer(self):
+        self.player = Player()
+
+        # create a new Vertex Array Object on the GPU which saves the attribute
+        # layout of our vertices
+        self.playerVao = glGenVertexArrays(1)
+        glBindVertexArray(self.playerVao)
+
+        # create a buffer on the GPU for position and color data
+        vertexBuffer, faceBuffer = glGenBuffers(2)
+
+        # upload the data to the GPU, storing it in the buffer we just created
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            self.player.vertices.nbytes,
+            self.player.vertices,
+            GL_STATIC_DRAW
+        )
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faceBuffer)
+        glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            self.player.faces.nbytes,
+            self.player.faces,
+            GL_STATIC_DRAW
+        )
+
+        # load our vertex and fragment shaders into a program object on the GPU
+        self.playerProgram = self.loadPlayerShaders()
+        glUseProgram(self.playerProgram)
+
+        # bind the attribute "position" (defined in our vertex shader) to the
+        # currently bound buffer object, which contains our position data
+        # this information is stored in our vertex array object
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
+        position = glGetAttribLocation(self.playerProgram, 'position')
+        glEnableVertexAttribArray(position)
+        glVertexAttribPointer(
+            position,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            c_void_p(0)
+        )
+
+        self.playerProjMatLoc = glGetUniformLocation(self.playerProgram, "projection")
+        self.modelModelMatLoc = glGetUniformLocation(self.playerProgram, "model")
 
     def keyPressEvent(self, event):
         key = event.text()
@@ -215,7 +178,7 @@ class GameWidget(QGLWidget):
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeGround()
-        self.character = Player()
+        self.initializePlayer()
         self.initializeTimer()
         self.makeScoreLabel()
 
@@ -250,7 +213,7 @@ class GameWidget(QGLWidget):
         self.scoreLabel.move(200, 10)
 
 
-    def loadShaders(self):
+    def loadGroundShaders(self):
         # create a GL Program Object
         program = glCreateProgram()
 
@@ -296,17 +259,71 @@ class GameWidget(QGLWidget):
 
         return program
 
+
+    def loadPlayerShaders(self):
+        # create a GL Program Object
+        program = glCreateProgram()
+
+        # vertex shader
+        vs_source = dedent("""
+            #version 330
+            uniform mat4 projection;
+            uniform mat4 model;
+            in vec3 position;
+            void main()
+            {
+               gl_Position = projection * model * vec4(position, 1.0);
+            }\
+        """)
+        vs = glCreateShader(GL_VERTEX_SHADER)
+        glShaderSource(vs, vs_source)
+        glCompileShader(vs)
+        glAttachShader(program, vs)
+        if glGetShaderiv(vs, GL_COMPILE_STATUS) != GL_TRUE:
+            raise RuntimeError(glGetShaderInfoLog(vs))
+
+        # fragment shader
+        fs_source = dedent("""
+            #version 330
+            void main()
+            {
+               gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            }\
+        """)
+        fs = glCreateShader(GL_FRAGMENT_SHADER)
+        glShaderSource(fs, fs_source)
+        glCompileShader(fs)
+        glAttachShader(program, fs)
+        if glGetShaderiv(fs, GL_COMPILE_STATUS) != GL_TRUE:
+            raise RuntimeError(glGetShaderInfoLog(fs))
+
+        # use the program
+        glLinkProgram(program)
+        glUseProgram(program)
+
+        return program
+
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        #glDrawArrays(GL_TRIANGLE_FAN, 0, len(self.vertices))
-        self.renderCube()
+        self.renderGround()
+        self.renderPlayer()
 
-    def renderCube(self):
-        glUseProgram(self.cubeProg)
-        glBindVertexArray(self.cubeVao)
+    def renderGround(self):
+        glUseProgram(self.groundProgram)
+        glBindVertexArray(self.groundVao)
         glDrawElements(
             GL_TRIANGLE_FAN,
-            len(self.indices),
+            len(self.ground.indices),
+            GL_UNSIGNED_INT,
+            c_void_p(0)
+        )
+
+    def renderPlayer(self):
+        glUseProgram(self.playerProgram)
+        glBindVertexArray(self.playerVao)
+        glDrawElements(
+            GL_TRIANGLES,
+            sum(map(len, [f for f in self.player.faces])),
             GL_UNSIGNED_INT,
             c_void_p(0)
         )
@@ -316,14 +333,31 @@ class GameWidget(QGLWidget):
 
         camera = QMatrix4x4()
         camera.perspective(60, 4.0/3.0, 0.1, 100.0)
-        camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
+        camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
 
-        glUseProgram(self.cubeProg)
+        glUseProgram(self.groundProgram)
         glUniformMatrix4fv(
-            self.cubeProjMatLoc,
+            self.groundProjMatLoc,
             1,
             GL_FALSE,
             array('f', camera.data()).tostring()
+        )
+
+        glUseProgram(self.playerProgram)
+        glUniformMatrix4fv(
+            self.playerProjMatLoc,
+            1,
+            GL_FALSE,
+            array('f', camera.data()).tostring()
+        )
+
+        print('player: {0}'.format(self.player.model))
+        glUseProgram(self.playerProgram)
+        glUniformMatrix4fv(
+            self.modelModelMatLoc,
+            1,
+            GL_FALSE,
+            array('f', self.player.model.data()).tostring()
         )
 
     def sizeof(self, a):
