@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import os
 from array          import array
 from ctypes         import c_void_p
@@ -8,7 +8,7 @@ from OpenGL.GLU     import *
 from PyQt5.QtOpenGL import QGLWidget
 from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
 from PyQt5.QtMultimedia import QSound
-=======
+
 from array           import array
 from ctypes          import c_void_p
 from textwrap        import dedent
@@ -20,7 +20,6 @@ from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
 from PyQt5.QtWidgets import QProgressBar, QPushButton
 from package.ui.widgets.Player import Player
 
->>>>>>> refs/remotes/origin/master
 
 class GameWidget(QGLWidget):
 
@@ -31,18 +30,13 @@ class GameWidget(QGLWidget):
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
-<<<<<<< HEAD
         package_directory = os.path.dirname(os.path.abspath(__file__))
         wav_file = os.path.join(package_directory, '..', '..', 'theme.wav')
         print(wav_file)
         self.sound = QSound(wav_file)
         self.sound.setLoops(QSound.Infinite)
-
-        
-=======
         self.score = 0
         self.character = Player()
->>>>>>> refs/remotes/origin/master
 
 
     def initializeCube(self):
@@ -240,9 +234,9 @@ class GameWidget(QGLWidget):
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
-<<<<<<< HEAD
+
         self.playMusic()
-=======
+
         self.initializeTimer()
         self.makeScoreLabel()
 
@@ -259,7 +253,7 @@ class GameWidget(QGLWidget):
         self.btn.move(500, 10)
         self.show()
 
->>>>>>> refs/remotes/origin/master
+
 
     def timerEvent(self, e):
         if self.step <= 0:
@@ -329,14 +323,12 @@ class GameWidget(QGLWidget):
         #glDrawArrays(GL_TRIANGLE_FAN, 0, len(self.vertices))
         self.renderCube()
 
-<<<<<<< HEAD
     def playMusic(self):
 
         self.sound.play()
-        #self.playMusic()
 
-=======
->>>>>>> refs/remotes/origin/master
+
+
     def renderCube(self):
         if hasattr(self, 'cubeProg'):
             glUseProgram(self.cubeProg)
