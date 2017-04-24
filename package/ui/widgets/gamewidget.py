@@ -1,14 +1,8 @@
 
-import os
-from array          import array
-from ctypes         import c_void_p
-from textwrap       import dedent
-from OpenGL.GL      import *
-from OpenGL.GLU     import *
-from PyQt5.QtOpenGL import QGLWidget
-from PyQt5.QtGui    import QImage, QMatrix4x4, qRgb, QVector3D
-from PyQt5.QtMultimedia import QSound
 
+import os
+from PyQt5.QtMultimedia import QSound
+from random import randrange
 from array           import array
 from ctypes          import c_void_p
 from textwrap        import dedent
@@ -21,6 +15,7 @@ from PyQt5.QtWidgets import QProgressBar, QPushButton
 from package.ui.widgets.Player import Player
 
 
+
 class GameWidget(QGLWidget):
 
 
@@ -30,11 +25,29 @@ class GameWidget(QGLWidget):
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
+
         package_directory = os.path.dirname(os.path.abspath(__file__))
-        wav_file = os.path.join(package_directory, '..', '..', 'theme.wav')
-        print(wav_file)
-        self.sound = QSound(wav_file)
-        self.sound.setLoops(QSound.Infinite)
+
+        music1 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '1.wav')
+        music2 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '2.wav')
+        music3 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '3.wav')
+        music4 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '4.wav')
+        music5 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '5.wav')
+        music6 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '6.wav')
+        music7 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '7.wav')
+        music8 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '8.wav')
+        music9 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '9.wav')
+        music10 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '10.wav')
+        music11 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '11.wav')
+
+
+        songs = [music1, music2, music3, music4, music5, music6, music7, music8, music9, music10, music11]
+        randIndex = randrange(0,len(songs))
+        randMusic = songs[randIndex]
+
+        self.backgroundMusic = QSound(randMusic)
+
+        self.backgroundMusic.setLoops(QSound.Infinite)
         self.score = 0
         self.character = Player()
 
@@ -325,7 +338,10 @@ class GameWidget(QGLWidget):
 
     def playMusic(self):
 
-        self.sound.play()
+        self.backgroundMusic.play()
+
+
+
 
 
 
@@ -358,45 +374,3 @@ class GameWidget(QGLWidget):
 
     def sizeof(self, a):
         return a.itemsize * len(a)
-
-scrabbleVals = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2,'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1,
-                'M': 3,'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8,
-                'Y': 4, 'Z': 10}
-
-#Calculates the value of each letter then returns the sum
-def getLetterValue(word):
-    count = 0
-
-    for char in word:
-        for letter in scrabbleVals:
-            if char == letter:
-                count += scrabbleVals[letter]
-
-    return count
-
-#Calulates the final value by evaluating word length
-    # then returns the word's letter point value + the word's length point value
-def getFinalValue(word):
-    wordLength = len(word)
-    dif = 0
-    letterValue = getLetterValue(word)
-
-    if wordLength > 4:
-        dif = wordLength - 4
-
-    return letterValue + dif
-
-#Grabs words from Txt file and calculates final point values
-    # then pushes them into a second pre-made Txt file then closes both files
-def changeWordFile(self):
-    unscored = open("package/assets/words/word_bank_unscored.txt", 'r+')
-    scored = open("package/assets/words/word_bank_scored.txt", 'r+')
-
-    for word in unscored:
-        pointValue = getFinalValue(word)
-        scored.write(word + str(pointValue) + '\n')
-
-    scored.close()
-    unscored.close()
-
-changeWordFile("")
