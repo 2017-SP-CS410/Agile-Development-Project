@@ -1,3 +1,6 @@
+
+import os
+import random
 from array           import array
 from ctypes          import c_void_p
 from textwrap        import dedent
@@ -6,11 +9,16 @@ from OpenGL.GLU      import *
 from PyQt5.QtCore    import QBasicTimer
 from PyQt5.QtOpenGL  import QGLWidget
 from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
-from PyQt5.QtWidgets import QProgressBar, QPushButton
-from .objects        import Player, Movement, Rotate, State
+from PyQt5.QtWidgets import QProgressBar, QPushButton, QLineEdit
+from package.ui.widgets.Player import Player
+from package.utilities.word import getFinalValue, makeWordList
+
+
+
 
 
 class GameWidget(QGLWidget):
+
 
     def __init__(self, n=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -18,9 +26,11 @@ class GameWidget(QGLWidget):
         self.n = n
         self.restart = 0xFFFFFFFF
         self.score = 0
+        self.character = Player()
+        self.wordList = makeWordList()
 
 
-    def initializeGround(self):
+    def initializeCube(self):
 
         self.vertices = array('f')
         self.colors = array('f')
@@ -172,50 +182,52 @@ class GameWidget(QGLWidget):
             0,
             c_void_p(0)
         )
-
         self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
+
 
     def keyPressEvent(self, event):
         key = event.text()
         if key == 'w':
-            self.character.move = Movement.forward
+            self.character.move = Player.Movement.forward
 
         elif key == 'a':
-            self.character.rotate = Rotate.right
+            self.character.rotate = Player.Rotate.clockwise
 
         elif key == 's':
-            self.character.move = Movement.backward
+            self.character.move = Player.Movement.backward
 
         elif key == 'd':
-            self.character.rotate = Rotate.left
+            self.character.rotate = Player.Rotate.counterclockwise
 
         elif key == ' ':
-            if self.character.state == State.moving:
-                self.character.move = State.typing
+            if self.character.state == Player.State.moving:
+                self.character.move = Player.State.typing
+            elif self.character.state == Player.State.typing:
+                self.character.move = Player.State.moving
 
-            elif self.character.state == State.typing:
-                self.character.move = State.moving
 
     def keyReleaseEvent(self, event):
         key = event.text()
         if key == 'w':
-            self.character.move = Movement.none
+            self.character.move = Player.Movement.none
 
         elif key == 'a':
-            self.character.rotate = Rotate.none
+            self.character.rotate = Player.Rotate.none
 
         elif key == 's':
-            self.character.move = Movement.none
+            self.character.move = Player.Movement.none
 
         elif key == 'd':
-            self.character.rotate = Rotate.none
+            self.character.rotate = Player.Rotate.none
+
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
-        self.initializeGround()
-        self.character = Player()
+        self.initializeCube()
+        self.clockStart()
+        self.typeBox()
         self.initializeTimer()
         self.makeScoreLabel()
 
@@ -223,25 +235,53 @@ class GameWidget(QGLWidget):
     def initializeTimer(self):
         self.pbar = QProgressBar(self)
         self.pbar.setGeometry(30, 40, 200, 25)
-        self.timer = QBasicTimer()
-        self.timer.start(1200, self)
-        self.step = 100
-        self.pbar.setValue(self.step)
-        self.btn = QPushButton("Time is: " + str(int(self.step * 1.2)), self)
+        self.pbar.setValue(int(self.step/1.2))
+        self.btn = QPushButton("Time is: " + str(int(self.step)), self)
         self.btn.setStyleSheet("background-color: black; color: red;")
         self.btn.move(500, 10)
         self.show()
+
 
     def timerEvent(self, e):
         if self.step <= 0:
             self.timer.stop()
             return
-        self.step -= 1
-        self.score += 1
-        self.btn.setText("Time is: " + str(int(self.step * 1.2)))
+        self.step -= 1 / 60
+        if (self.readbox.text() == self.textbox.text()):
+            self.textbox.setText("")
+        self.btn.setText("Time is: " + str(int((self.step))))
         self.scoreLabel.setText("Score: " + str(int(self.score)))
-        self.pbar.setValue(self.step)
+        self.pbar.setValue(int(self.step / 1.2))
         self.character.move()
+
+
+    def wordCompleted(self, word):
+        self.score += getFinalValue(word)
+        self.scoreLabel.setText("Score: " + self.score)
+
+
+    def typeBox(self):
+        ran = random.randint(0, len(self.wordList))
+        word = self.wordList[ran]
+        value = getFinalValue(word)
+        self.readbox = QLineEdit(self)
+        self.readbox.setText(word)
+        self.readbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.readbox.setReadOnly(True)
+        self.readbox.move(0, 420)
+        self.readbox.resize(640, 30)
+        self.textbox = QLineEdit(self)
+        self.textbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.textbox.move(0, 450)
+        self.textbox.setFocus()
+        self.textbox.resize(640, 30)
+
+
+    def clockStart(self):
+        self.timer = QBasicTimer()
+        self.timer.start(50/3, self)
+        self.step = 120
+
 
     def makeScoreLabel(self):
         self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
@@ -252,7 +292,6 @@ class GameWidget(QGLWidget):
     def loadShaders(self):
         # create a GL Program Object
         program = glCreateProgram()
-
         # vertex shader
         vs_source = dedent("""
             #version 330
@@ -272,7 +311,6 @@ class GameWidget(QGLWidget):
         glAttachShader(program, vs)
         if glGetShaderiv(vs, GL_COMPILE_STATUS) != GL_TRUE:
             raise RuntimeError(glGetShaderInfoLog(vs))
-
         # fragment shader
         fs_source = dedent("""
             #version 330
@@ -288,17 +326,17 @@ class GameWidget(QGLWidget):
         glAttachShader(program, fs)
         if glGetShaderiv(fs, GL_COMPILE_STATUS) != GL_TRUE:
             raise RuntimeError(glGetShaderInfoLog(fs))
-
         # use the program
         glLinkProgram(program)
         glUseProgram(program)
-
         return program
+
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         #glDrawArrays(GL_TRIANGLE_FAN, 0, len(self.vertices))
         self.renderCube()
+
 
     def renderCube(self):
         glUseProgram(self.cubeProg)
@@ -310,13 +348,12 @@ class GameWidget(QGLWidget):
             c_void_p(0)
         )
 
+
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
-
         camera = QMatrix4x4()
         camera.perspective(60, 4.0/3.0, 0.1, 100.0)
         camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
-
         glUseProgram(self.cubeProg)
         glUniformMatrix4fv(
             self.cubeProjMatLoc,
@@ -325,47 +362,6 @@ class GameWidget(QGLWidget):
             array('f', camera.data()).tostring()
         )
 
+
     def sizeof(self, a):
         return a.itemsize * len(a)
-
-scrabbleVals = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2,'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1,
-                'M': 3,'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8,
-                'Y': 4, 'Z': 10}
-
-#Calculates the value of each letter then returns the sum
-def getLetterValue(word):
-    count = 0
-
-    for char in word:
-        for letter in scrabbleVals:
-            if char == letter:
-                count += scrabbleVals[letter]
-
-    return count
-
-#Calulates the final value by evaluating word length
-    # then returns the word's letter point value + the word's length point value
-def getFinalValue(word):
-    wordLength = len(word)
-    dif = 0
-    letterValue = getLetterValue(word)
-
-    if wordLength > 4:
-        dif = wordLength - 4
-
-    return letterValue + dif
-
-#Grabs words from Txt file and calculates final point values
-    # then pushes them into a second pre-made Txt file then closes both files
-def changeWordFile(self):
-    unscored = open("package/assets/words/word_bank_unscored.txt", 'r+')
-    scored = open("package/assets/words/word_bank_scored.txt", 'r+')
-
-    for word in unscored:
-        pointValue = getFinalValue(word)
-        scored.write(word + str(pointValue) + '\n')
-
-    scored.close()
-    unscored.close()
-
-changeWordFile("")
