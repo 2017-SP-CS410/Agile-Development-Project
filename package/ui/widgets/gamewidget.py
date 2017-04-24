@@ -1,4 +1,3 @@
-
 import os
 import random
 from array           import array
@@ -10,7 +9,7 @@ from PyQt5.QtCore    import QBasicTimer
 from PyQt5.QtOpenGL  import QGLWidget
 from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
 from PyQt5.QtWidgets import QProgressBar, QPushButton, QLineEdit
-from package.ui.widgets.Player import Player
+from package.ui.widgets.objects import Player
 from package.utilities.word import getFinalValue, makeWordList
 
 
