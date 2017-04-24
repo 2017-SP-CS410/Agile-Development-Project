@@ -5,10 +5,14 @@ from textwrap        import dedent
 from OpenGL.GL       import *
 from OpenGL.GLU      import *
 from PyQt5.QtCore    import QBasicTimer
+from PyQt5.QtMultimedia import QSound
 from PyQt5.QtOpenGL  import QGLWidget
 from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
 from PyQt5.QtWidgets import QProgressBar, QPushButton
 from package.ui.widgets.Player import Player
+
+
+import os
 
 
 
@@ -24,6 +28,10 @@ class GameWidget(QGLWidget):
         self.score = 0
         self.character = Player()
 
+        package_directory = os.path.dirname(os.path.abspath(__file__))
+        sfx1 = os.path.join(package_directory, '..','..','assets','sfx','Jump_01.wav')
+        self.walk_sfx = QSound(sfx1)
+        self.walk_sfx.setLoops(QSound.Infinite)
 
     def initializeCube(self):
 
@@ -184,13 +192,13 @@ class GameWidget(QGLWidget):
         key = event.text()
         if key == 'w':
             self.character.move = Player.Movement.forward
-
+            self.walk_sfx.play()
         elif key == 'a':
             self.character.rotate = Player.Rotate.clockwise
 
         elif key == 's':
             self.character.move = Player.Movement.backward
-
+            self.walk_sfx.play()
         elif key == 'd':
             self.character.rotate = Player.Rotate.counterclockwise
 
@@ -205,13 +213,13 @@ class GameWidget(QGLWidget):
         key = event.text()
         if key == 'w':
             self.character.move = Player.Movement.none
-
+            self.walk_sfx.stop()
         elif key == 'a':
             self.character.rotate = Player.Rotate.none
 
         elif key == 's':
             self.character.move = Player.Movement.none
-
+            self.walk_sfx.stop()
         elif key == 'd':
             self.character.rotate = Player.Rotate.none
 
