@@ -1,5 +1,8 @@
+
+
 import os
-import random
+from PyQt5.QtMultimedia import QSound
+from random import randrange, randint
 from array           import array
 from ctypes          import c_void_p
 from textwrap        import dedent
@@ -24,6 +27,29 @@ class GameWidget(QGLWidget):
         self.setMinimumSize(640, 480)
         self.n = n
         self.restart = 0xFFFFFFFF
+
+        package_directory = os.path.dirname(os.path.abspath(__file__))
+
+        music1 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '1.wav')
+        music2 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '2.wav')
+        music3 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '3.wav')
+        music4 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '4.wav')
+        music5 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '5.wav')
+        music6 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '6.wav')
+        music7 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '7.wav')
+        music8 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '8.wav')
+        music9 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '9.wav')
+        music10 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '10.wav')
+        music11 = os.path.join(package_directory, '..', '..', 'assets', 'Music', '11.wav')
+
+
+        songs = [music1, music2, music3, music4, music5, music6, music7, music8, music9, music10, music11]
+        randIndex = randrange(0,len(songs))
+        randMusic = songs[randIndex]
+
+        self.backgroundMusic = QSound(randMusic)
+
+        self.backgroundMusic.setLoops(QSound.Infinite)
         self.score = 0
         self.character = Player()
         self.wordList = makeWordList()
@@ -225,6 +251,7 @@ class GameWidget(QGLWidget):
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
+        self.playMusic()
         self.clockStart()
         self.typeBox()
         self.initializeTimer()
@@ -239,6 +266,7 @@ class GameWidget(QGLWidget):
         self.btn.setStyleSheet("background-color: black; color: red;")
         self.btn.move(500, 10)
         self.show()
+
 
 
     def timerEvent(self, e):
@@ -259,7 +287,7 @@ class GameWidget(QGLWidget):
 
 
     def typeBox(self):
-        ran = random.randint(0, len(self.wordList))
+        ran = randint(0, len(self.wordList))
         word = self.wordList[ran]
         value = getFinalValue(word)
         self.readbox = QLineEdit(self)
@@ -334,6 +362,9 @@ class GameWidget(QGLWidget):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         #glDrawArrays(GL_TRIANGLE_FAN, 0, len(self.vertices))
         self.renderCube()
+
+    def playMusic(self):
+        self.backgroundMusic.play()
 
 
     def renderCube(self):
