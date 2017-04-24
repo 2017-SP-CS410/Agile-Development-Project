@@ -241,9 +241,9 @@ class GameWidget(QGLWidget):
             self.timer.stop()
             return
         self.step -= 1 / 60
-        if(self.check):
-            if (self.readbox.text() == self.textbox.text()):
-                self.scoreLabel.setText("Score: " + self.score)
+        # if(self.check):
+        #     if (self.readbox.text() == self.textbox.text()):
+        #         self.scoreLabel.setText("Score: " + self.score)
         self.btn.setText("Time is: " + str(int((self.step))))
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(int(self.step / 1.2))
