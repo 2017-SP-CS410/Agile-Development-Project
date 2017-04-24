@@ -2,7 +2,7 @@
 
 import os
 from PyQt5.QtMultimedia import QSound
-from random import randrange
+from random import randrange, randint
 from array           import array
 from ctypes          import c_void_p
 from textwrap        import dedent
@@ -11,13 +11,15 @@ from OpenGL.GLU      import *
 from PyQt5.QtCore    import QBasicTimer
 from PyQt5.QtOpenGL  import QGLWidget
 from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
-from PyQt5.QtWidgets import QProgressBar, QPushButton
+from PyQt5.QtWidgets import QProgressBar, QPushButton, QLineEdit
 from package.ui.widgets.Player import Player
+from package.utilities.word import getFinalValue, makeWordList
+
+
 
 
 
 class GameWidget(QGLWidget):
-
 
 
     def __init__(self, n=10, *args, **kwargs):
@@ -50,6 +52,7 @@ class GameWidget(QGLWidget):
         self.backgroundMusic.setLoops(QSound.Infinite)
         self.score = 0
         self.character = Player()
+        self.wordList = makeWordList()
 
 
     def initializeCube(self):
@@ -204,8 +207,8 @@ class GameWidget(QGLWidget):
             0,
             c_void_p(0)
         )
-
         self.cubeProjMatLoc = glGetUniformLocation(program, "projection")
+
 
     def keyPressEvent(self, event):
         key = event.text()
@@ -224,9 +227,9 @@ class GameWidget(QGLWidget):
         elif key == ' ':
             if self.character.state == Player.State.moving:
                 self.character.move = Player.State.typing
-
             elif self.character.state == Player.State.typing:
                 self.character.move = Player.State.moving
+
 
     def keyReleaseEvent(self, event):
         key = event.text()
@@ -242,14 +245,15 @@ class GameWidget(QGLWidget):
         elif key == 'd':
             self.character.rotate = Player.Rotate.none
 
+
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
         self.initializeCube()
-
         self.playMusic()
-
+        self.clockStart()
+        self.typeBox()
         self.initializeTimer()
         self.makeScoreLabel()
 
@@ -257,11 +261,8 @@ class GameWidget(QGLWidget):
     def initializeTimer(self):
         self.pbar = QProgressBar(self)
         self.pbar.setGeometry(30, 40, 200, 25)
-        self.timer = QBasicTimer()
-        self.timer.start(1200, self)
-        self.step = 100
-        self.pbar.setValue(self.step)
-        self.btn = QPushButton("Time is: " + str(int(self.step * 1.2)), self)
+        self.pbar.setValue(int(self.step/1.2))
+        self.btn = QPushButton("Time is: " + str(int(self.step)), self)
         self.btn.setStyleSheet("background-color: black; color: red;")
         self.btn.move(500, 10)
         self.show()
@@ -272,11 +273,40 @@ class GameWidget(QGLWidget):
         if self.step <= 0:
             self.timer.stop()
             return
-        self.step -= 1
-        self.score += 1
-        self.btn.setText("Time is: " + str(int(self.step * 1.2)))
+        self.step -= 1 / 60
+        if (self.readbox.text() == self.textbox.text()):
+            self.textbox.setText("")
+        self.btn.setText("Time is: " + str(int((self.step))))
         self.scoreLabel.setText("Score: " + str(int(self.score)))
-        self.pbar.setValue(self.step)
+        self.pbar.setValue(int(self.step / 1.2))
+
+
+    def wordCompleted(self, word):
+        self.score += getFinalValue(word)
+        self.scoreLabel.setText("Score: " + self.score)
+
+
+    def typeBox(self):
+        ran = randint(0, len(self.wordList))
+        word = self.wordList[ran]
+        value = getFinalValue(word)
+        self.readbox = QLineEdit(self)
+        self.readbox.setText(word)
+        self.readbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.readbox.setReadOnly(True)
+        self.readbox.move(0, 420)
+        self.readbox.resize(640, 30)
+        self.textbox = QLineEdit(self)
+        self.textbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.textbox.move(0, 450)
+        self.textbox.setFocus()
+        self.textbox.resize(640, 30)
+
+
+    def clockStart(self):
+        self.timer = QBasicTimer()
+        self.timer.start(50/3, self)
+        self.step = 120
 
 
     def makeScoreLabel(self):
@@ -288,7 +318,6 @@ class GameWidget(QGLWidget):
     def loadShaders(self):
         # create a GL Program Object
         program = glCreateProgram()
-
         # vertex shader
         vs_source = dedent("""
             #version 330
@@ -308,7 +337,6 @@ class GameWidget(QGLWidget):
         glAttachShader(program, vs)
         if glGetShaderiv(vs, GL_COMPILE_STATUS) != GL_TRUE:
             raise RuntimeError(glGetShaderInfoLog(vs))
-
         # fragment shader
         fs_source = dedent("""
             #version 330
@@ -324,12 +352,11 @@ class GameWidget(QGLWidget):
         glAttachShader(program, fs)
         if glGetShaderiv(fs, GL_COMPILE_STATUS) != GL_TRUE:
             raise RuntimeError(glGetShaderInfoLog(fs))
-
         # use the program
         glLinkProgram(program)
         glUseProgram(program)
-
         return program
+
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -337,40 +364,33 @@ class GameWidget(QGLWidget):
         self.renderCube()
 
     def playMusic(self):
-
         self.backgroundMusic.play()
 
 
-
-
-
-
     def renderCube(self):
-        if hasattr(self, 'cubeProg'):
-            glUseProgram(self.cubeProg)
-            glBindVertexArray(self.cubeVao)
-            glDrawElements(
-                GL_TRIANGLE_FAN,
-                len(self.indices),
-                GL_UNSIGNED_INT,
-                c_void_p(0)
-            )
+        glUseProgram(self.cubeProg)
+        glBindVertexArray(self.cubeVao)
+        glDrawElements(
+            GL_TRIANGLE_FAN,
+            len(self.indices),
+            GL_UNSIGNED_INT,
+            c_void_p(0)
+        )
+
 
     def resizeGL(self, width, height):
-        if hasattr(self, 'cubeProg'):
-            glViewport(0, 0, width, height)
+        glViewport(0, 0, width, height)
+        camera = QMatrix4x4()
+        camera.perspective(60, 4.0/3.0, 0.1, 100.0)
+        camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
+        glUseProgram(self.cubeProg)
+        glUniformMatrix4fv(
+            self.cubeProjMatLoc,
+            1,
+            GL_FALSE,
+            array('f', camera.data()).tostring()
+        )
 
-            camera = QMatrix4x4()
-            camera.perspective(60, 4.0/3.0, 0.1, 100.0)
-            camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 1))
-
-            glUseProgram(self.cubeProg)
-            glUniformMatrix4fv(
-                self.cubeProjMatLoc,
-                1,
-                GL_FALSE,
-                array('f', camera.data()).tostring()
-            )
 
     def sizeof(self, a):
         return a.itemsize * len(a)
