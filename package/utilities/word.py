@@ -31,7 +31,7 @@ def makeWordList():
     word_bank_unscored = os.path.join(package_directory, '..', 'assets', 'words', 'word_bank_unscored.txt')
 
     for word in open(word_bank_unscored, 'r'):
-        list.append(word.strip())
+        list.append(str.lower(word.strip()))
     return list
 
 
