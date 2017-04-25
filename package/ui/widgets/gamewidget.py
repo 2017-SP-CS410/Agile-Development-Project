@@ -26,6 +26,37 @@ class GameWidget(QGLWidget):
         #self.word = wordList[ran]
         self.character = Player()
         self.wordList = makeWordList()
+        self.check = False
+
+    def checkSpell(self):
+        correctWord = self.readbox.text()
+        inputWord = self.textbox.text()
+        failCount = 0
+
+        for inputChar, correctChar in zip(correctWord, inputWord):
+            if inputChar == correctChar and failCount == 0:
+
+                self.textbox.setStyleSheet('color: yellow; \
+                                            background-color: black; \
+                                            border-color: black;')
+                # print(inputChar)
+                # print("Yellow")
+
+                if inputWord == correctWord:
+                    self.textbox.setStyleSheet('color: green; \
+                                            background-color: black; \
+                                            border-color: black;')
+                    # print("Green")
+                    # Close player interaction? Score?
+
+            else:
+
+                self.textbox.setStyleSheet('color: red; \
+                                            background-color: black; \
+                                            border-color: black;')
+                failCount += 1
+                # print(inputChar + " Wrong!")
+                # print("Red")
 
     def initializeCube(self):
         self.vertices = array('f')
@@ -241,9 +272,11 @@ class GameWidget(QGLWidget):
             self.timer.stop()
             return
         self.step -= 1 / 60
-        # if(self.check):
-        #     if (self.readbox.text() == self.textbox.text()):
-        #         self.scoreLabel.setText("Score: " + self.score)
+        # if (self.readbox.text() == self.textbox.text()):
+        #     self.textbox.setText("")
+        if self.check:
+            self.checkSpell()
+
         self.btn.setText("Time is: " + str(int((self.step))))
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(int(self.step / 1.2))
@@ -269,7 +302,6 @@ class GameWidget(QGLWidget):
         self.textbox.move(0, 450)
         self.textbox.setFocus()
         self.textbox.resize(640, 30)
-        # self.update()
         self.repaint()
         self.readbox.show()
         self.textbox.show()
