@@ -325,7 +325,7 @@ class LoadableObject(Drawable):
             max_z = max(z, max_z)
         diff = max(max_x-min_x, max_y-min_y, max_z-min_z)
         for v in self.vertices:
-            v /= diff
+            v /= (diff/2)
 
         self.faces = mesh.faces
 	
@@ -349,7 +349,7 @@ class Cow(TypeableObject):
 	
 class Player(LoadableObject):
     def __init__(self):
-        super(Player, self).__init__('package/assets/models/cow.obj')
+        super(Player, self).__init__('package/assets/models/player.obj')
         self.vx = 0
         self.vy = 0
         self.theta = 0

@@ -1,10 +1,8 @@
-from array           import array
-from collections     import namedtuple
 from OpenGL.GL       import *
 from OpenGL.GLU      import *
 from PyQt5.QtCore    import QBasicTimer
 from PyQt5.QtOpenGL  import QGLWidget
-from PyQt5.QtGui     import QImage, QMatrix4x4, QVector3D
+from PyQt5.QtGui     import QMatrix4x4, QVector3D
 from PyQt5.QtWidgets import QProgressBar, QPushButton
 from .objects        import Ground, Movement, Player, Rotate, State, ObjectFactory
 
@@ -33,36 +31,22 @@ class GameWidget(QGLWidget):
         key = event.text()
         if key == 'w':
             self.character.move = Movement.forward
-
         elif key == 'a':
             self.character.rotate = Rotate.right
-
         elif key == 's':
             self.character.move = Movement.backward
-
         elif key == 'd':
             self.character.rotate = Rotate.left
-
         elif key == ' ':
             if self.character.state == State.moving:
                 self.character.move = State.typing
-
             elif self.character.state == State.typing:
                 self.character.move = State.moving
 
     def keyReleaseEvent(self, event):
         key = event.text()
-        if key == 'w':
+        if key in ['w', 'a', 's', 'd']:
             self.character.move = Movement.none
-
-        elif key == 'a':
-            self.character.rotate = Rotate.none
-
-        elif key == 's':
-            self.character.move = Movement.none
-
-        elif key == 'd':
-            self.character.rotate = Rotate.none
 
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
@@ -70,11 +54,10 @@ class GameWidget(QGLWidget):
         glEnable(GL_PRIMITIVE_RESTART)
         # TODO: update each to use objects.py
         self.initializeGround()
-        #self.initializePlayer()
+        self.initializePlayer()
         self.initializeObjects()
         self.initializeTimer()
         self.makeScoreLabel()
-
 
     def initializeTimer(self):
         self.pbar = QProgressBar(self)
@@ -88,7 +71,6 @@ class GameWidget(QGLWidget):
         self.btn.move(500, 10)
         self.show()
 
-
     def timerEvent(self, e):
         if self.step <= 0:
             self.timer.stop()
@@ -99,17 +81,15 @@ class GameWidget(QGLWidget):
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(self.step)
 
-
     def makeScoreLabel(self):
         self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
         self.scoreLabel.setStyleSheet("background-color: black; color: red;")
         self.scoreLabel.move(200, 10)
 
-
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         # TODO: render all players and objects
-        #self.player.render()
+        self.player.render()
         self.ground.render()
         for o in self.objects:
             o.render()
@@ -122,11 +102,10 @@ class GameWidget(QGLWidget):
         camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
 
         # TODO: resize all players and objects
-        #self.player.resize(camera)
+        self.player.resize(camera)
         self.ground.resize(camera)
         for o in self.objects:
             o.resize(camera)
-
 
 scrabbleVals = {'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2,'H': 4, 'I': 1, 'J': 8, 'K': 5, 'L': 1,
                 'M': 3,'N': 1, 'O': 1, 'P': 3, 'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8,
