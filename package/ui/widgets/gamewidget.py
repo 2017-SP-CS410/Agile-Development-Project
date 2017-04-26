@@ -20,7 +20,18 @@ from package.utilities.word import getFinalValue, makeWordList
 
 
 class GameWidget(QGLWidget):
+    #   ********** Destroy sound for typable object ***********
+    # sfx_dir = os.path.join(os.path.abspath(__file__))
+    # destroy = os.path.join(sound_dir, '..', '..', 'assets', 'SoundEffects', 'destroy.wav')
+    # destroySFX = QSound(destroy)
+    # destroySFX.play()
 
+    # *********** Success Sound for completed word **************
+    # sfx_dir = os.path.join(os.path.abspath(__file__))
+    # success = os.path.join(sfx_dir, '..', '..', 'assets', 'SoundEffects', 'destroy.wav')
+    # fail =  os.path.join(sfx_dir, '..', '..', 'assets', 'SoundEffects', 'destroy.wav')
+    # successSFX = QSound(success)
+    # failSFX = QSound(fail)
 
     def __init__(self, n=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
