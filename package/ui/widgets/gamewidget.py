@@ -14,7 +14,6 @@ from package.utilities.word import getFinalValue, makeWordList
 
 
 class GameWidget(QGLWidget):
-
     def __init__(self, n=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setMinimumSize(640, 480)
@@ -43,14 +42,22 @@ class GameWidget(QGLWidget):
                 # print("Yellow")
 
                 if inputWord == correctWord:
+                    print('above')
+                    self.wordCompleted(correctWord)
+                    print('below')
+
                     self.textbox.setStyleSheet('color: green; \
                                             background-color: black; \
                                             border-color: black;')
                     # print("Green")
                     # Close player interaction? Score?
 
+                    self.readbox.close()
+                    self.textbox.close()
+                    self.check = False
+                    # self.score += getFinalValue(correctWord)
+                    # self.scoreLabel.setText("Score: " + self.score)
             else:
-
                 self.textbox.setStyleSheet('color: red; \
                                             background-color: black; \
                                             border-color: black;')
@@ -282,8 +289,9 @@ class GameWidget(QGLWidget):
         self.pbar.setValue(int(self.step / 1.2))
 
     def wordCompleted(self, word):
+        print("init")
         self.score += getFinalValue(word)
-        self.scoreLabel.setText("Score: " + self.score)
+        self.scoreLabel.setText("Score: " + str(self.score))
 
     def typeBox(self):
         self.check = True
@@ -293,12 +301,12 @@ class GameWidget(QGLWidget):
         self.readbox = QLineEdit(self)
         print("Build the text box")
         self.readbox.setText(word)
-        self.readbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.readbox.setStyleSheet("background-color: black; color: white; border-color: black;")
         self.readbox.setReadOnly(True)
         self.readbox.move(0, 420)
         self.readbox.resize(640, 30)
         self.textbox = QLineEdit(self)
-        self.textbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.textbox.setStyleSheet("background-color: black; color: white; border-color: black;")
         self.textbox.move(0, 450)
         self.textbox.setFocus()
         self.textbox.resize(640, 30)
