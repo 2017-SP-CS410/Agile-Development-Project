@@ -1,3 +1,9 @@
-*.iml
-*.xml
+.idea/*
+__pycache__/*
+package/__pycache__/*
+package/ui/__pycache__/*
+package/ui/widgets/__pycache__/*
 *.pyc
+package/*.pyc
+package/ui/*.pyc
+package/ui/widgets/*.pyc
