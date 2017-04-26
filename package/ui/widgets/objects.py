@@ -62,21 +62,25 @@ class Player(LoadableObject):
         self.vy = 0
         self.theta = 0
         self.speed = 1
-        self.move = Movement.none
+        self.movement = Movement.none
         self.rotate = Rotate.none
         self.state = State.moving	
 
     def move(self):
-        if self.rotate != Rotate.none:
-            self.theta = self.theta - pi/18 if self.rotate == Rotate.left \
-                                            else self.theta + pi/18
-        self.vx = self.speed * cos(self.theta)
-        self.vy = self.speed * sin(self.theta)
-        self.x += self.vx
-        self.y += self.vy
-        n = self.n/2
-        self.x = n if self.x > n else -n if self.x < -n else self.x
-        self.y = n if self.y > n else -n if self.y < -n else self.y
+        if self.state == State.moving:
+            if self.rotate != Rotate.none:
+                self.theta = self.theta - pi/18 if self.rotate == Rotate.left \
+                                                else self.theta + pi/18
+            if self.movement != Movement.none:
+                self.vx = self.speed * cos(self.theta)
+                self.vy = self.speed * sin(self.theta)
+                self.vx = -self.vx if self.movement == Movement.backward else self.vx
+                self.vy = -self.vy if self.movement == Movement.backward else self.vy
+                self.x += self.vx
+                self.y += self.vy
+                n = self.n/2
+                self.x = n if self.x > n else -n if self.x < -n else self.x
+                self.y = n if self.y > n else -n if self.y < -n else self.y
 
 
 # The Abstract Factory
