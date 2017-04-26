@@ -1,8 +1,13 @@
 import math
+import numpy as np
 import random
 from array       import array
+from ctypes      import c_void_p
 from enum        import Enum
 from pyassimp    import load
+from textwrap    import dedent
+from OpenGL.GL   import *
+from OpenGL.GLU  import *
 from PyQt5.QtGui import QMatrix4x4
 
 
@@ -22,13 +27,149 @@ class State(Enum):
     moving = 0
     typing = 1
 
-class Ground:
-    def __init__(self, n, restart):
 
+class Drawable:
+
+    def __init__(self):
+        self.model = QMatrix4x4()
+        self.initializeGL()
+
+    def byteData(self, data):
+        return data
+
+    def byteSize(self, data):
+        return data.nbytes
+
+    def initializeGL(self):
+        # create Vertex Array Object on the GPU
+        self.vao = glGenVertexArrays(1)
+        glBindVertexArray(self.vao)
+        # create a buffer on the GPU
+        vertexBuffer, faceBuffer = glGenBuffers(2)
+        # upload the data to the GPU
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            self.byteSize(self.vertices),
+            self.byteData(self.vertices),
+            GL_STATIC_DRAW
+        )
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faceBuffer)
+        glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER,
+            self.byteSize(self.faces),
+            self.byteData(self.faces),
+            GL_STATIC_DRAW
+        )
+        # load our vertex and fragment shaders onto the GPU
+        self.program = self.loadShaders()
+        glUseProgram(self.program)
+        # bind buffers to shader attributes
+        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
+        position = glGetAttribLocation(self.program, 'position')
+        glEnableVertexAttribArray(position)
+        glVertexAttribPointer(
+            position,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            c_void_p(0)
+        )
+        self.projectionMatrix = glGetUniformLocation(self.program, 'projection')
+        self.modelMatrix = glGetUniformLocation(self.program, 'model')
+
+    def loadShaders(self):
+        # create a GL Program Object
+        program = glCreateProgram()
+        # vertex shader
+        vs = glCreateShader(GL_VERTEX_SHADER)
+        glShaderSource(vs, self.vs_source)
+        glCompileShader(vs)
+        glAttachShader(program, vs)
+        if glGetShaderiv(vs, GL_COMPILE_STATUS) != GL_TRUE:
+            raise RuntimeError(glGetShaderInfoLog(vs))
+        # fragment shader
+        fs = glCreateShader(GL_FRAGMENT_SHADER)
+        glShaderSource(fs, self.fs_source)
+        glCompileShader(fs)
+        glAttachShader(program, fs)
+        if glGetShaderiv(fs, GL_COMPILE_STATUS) != GL_TRUE:
+            raise RuntimeError(glGetShaderInfoLog(fs))
+        # use the program
+        glLinkProgram(program)
+        glUseProgram(program)
+
+        return program
+
+    def numFaces(self, faces):
+        return sum(map(len, [f for f in faces]))
+
+    def render(self):
+        glUseProgram(self.program)
+        glBindVertexArray(self.vao)
+        glDrawElements(
+            self.elements,
+            self.numFaces(self.faces),
+            GL_UNSIGNED_INT,
+            c_void_p(0)
+        )
+
+    def resize(self, projection):
+        glUseProgram(self.program)
+        glUniformMatrix4fv(
+            self.projectionMatrix,
+            1,
+            GL_FALSE,
+            array('f', projection.data()).tostring()
+        )
+        glUseProgram(self.program)
+        glUniformMatrix4fv(
+            self.modelMatrix,
+            1,
+            GL_FALSE,
+            array('f', self.model.data()).tostring()
+        )
+
+
+class Ground(Drawable):
+
+    vs_source = dedent("""
+        #version 330
+        uniform mat4 projection;
+        in vec3 position;
+        in vec3 color;
+        out vec3 fcolor;
+        void main()
+        {
+           gl_Position = projection * vec4(position, 1.0);
+           fcolor = color;
+        }\
+    """)
+    fs_source = dedent("""
+        #version 330
+        in vec3 fcolor;
+        void main()
+        {
+           gl_FragColor = vec4(fcolor, 1.0);
+        }\
+    """)
+
+    def __init__(self, n, restart):
+        self.elements = GL_TRIANGLE_FAN
+        self.generateData(n, restart)
+        super(Ground, self).__init__()
+
+    def byteData(self, data):
+        return data.tostring()
+
+    def byteSize(self, a):
+        return a.itemsize * len(a)
+
+    def generateData(self, n, restart):
         self.vertices = array('f')
         self.colors = array('f')
-        self.indices = array('I')
-
+        self.faces = array('I')
         half_n = n / 2
         x = y = -half_n
         i = 0
@@ -66,6 +207,14 @@ class Ground:
                     x, y+1, -1,  # 22
                     x,   y, -1   # 23
                 ])
+                self.faces.extend([
+                     i+0,  i+1,  i+2,  i+3, restart,
+                     i+4,  i+5,  i+6,  i+7, restart,
+                     i+8,  i+9, i+10, i+11, restart,
+                    i+12, i+13, i+14, i+15, restart,
+                    i+16, i+17, i+18, i+19, restart,
+                    i+20, i+21, i+22, i+23, restart
+                ])
                 self.colors.extend([
                     # top
                     0,1,0,
@@ -98,23 +247,67 @@ class Ground:
                     .5,0,0,
                     .5,0,0
                 ])
-                self.indices.extend([
-                     i+0,  i+1,  i+2,  i+3, restart,
-                     i+4,  i+5,  i+6,  i+7, restart,
-                     i+8,  i+9, i+10, i+11, restart,
-                    i+12, i+13, i+14, i+15, restart,
-                    i+16, i+17, i+18, i+19, restart,
-                    i+20, i+21, i+22, i+23, restart
-                ])
                 y += 1
                 i += 24
             y = -half_n
             x += 1
-        self.indices.pop()
+        self.faces.pop()
+
+    def initializeGL(self):
+        super(Ground, self).initializeGL()
+        colorBuffer = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, colorBuffer)
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            self.byteSize(self.colors),
+            self.byteData(self.colors),
+            GL_STATIC_DRAW
+        )
+        glBindBuffer(GL_ARRAY_BUFFER, colorBuffer)
+        color = glGetAttribLocation(self.program, 'color')
+        glEnableVertexAttribArray(color)
+        glVertexAttribPointer(
+            color,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            c_void_p(0)
+        )
+
+    def numFaces(self, faces):
+        return len(faces)
 
 
-class LoadableObject:
-    def __init__(self, filename):
+class LoadableObject(Drawable):
+
+    vs_source = dedent("""
+        #version 330
+        uniform mat4 projection;
+        uniform mat4 model;
+        in vec3 position;
+        void main()
+        {
+           gl_Position = projection * model * vec4(position, 1.0);
+        }\
+    """)
+    fs_source = dedent("""
+        #version 330
+        void main()
+        {
+           gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        }\
+    """)
+
+    def __init__(self, filename, x=0, y=0, direction=0):
+        self.elements = GL_TRIANGLES
+        self.loadObject(filename)
+        super(LoadableObject, self).__init__()
+        self.model.rotate(90, 1, 0, 0)
+        self.model.translate(x, 0.5, y)
+        self.model.rotate(direction, 0, 1, 0)
+
+    def loadObject(self, filename):
         mesh = load(filename).meshes[0]
         self.vertices = mesh.vertices
         min_x = math.inf
@@ -135,17 +328,11 @@ class LoadableObject:
             v /= diff
 
         self.faces = mesh.faces
-        self.model = QMatrix4x4()
-        self.model.rotate(90, 1, 0, 0)
-        self.model.translate(0, 0.5, 0)
-        #pull in N and position X and Y randomly with N
-        self.x = 0
-        self.y = 0
 	
     
 class TypeableObject(LoadableObject):
-    def __init__(self, filename):
-	    super(TypeableObject, self).__init__(filename)
+    def __init__(self, filename, x, y, direction):
+	    super(TypeableObject, self).__init__(filename, x, y, direction)
 	    # TODO: get word and score from word bank
 	
     def destroy(self):
@@ -154,14 +341,10 @@ class TypeableObject(LoadableObject):
 	    # TODO: remove from world
 	
     
-class RedBox(TypeableObject):
-    def __init__(self):
-	    super(RedBox, self).__init__('path/to/red/model')
-	
-    
-class BlueBox(TypeableObject):
-    def __init__(self):
-	    super(BlueBox, self).__init__('path/to/blue/model')
+class Cow(TypeableObject):
+    def __init__(self, x, y, direction):
+        model = 'package/assets/models/cow.obj'
+        super(Cow, self).__init__(model, x, y, direction)
 	
 	
 class Player(LoadableObject):
@@ -176,17 +359,24 @@ class Player(LoadableObject):
 	
     
 # The Abstract Factory
-class ObjectFactory:
+class Factory:
     def CreateObject(self): pass
 	
 
 # Concrete factories:
-class BoxFactory(ObjectFactory):
-    _boxes = [RedBox, BlueBox]
-    def CreateObject(self):
-	    return self._boxes[random.randrange(len(self._boxes))]()
+class ObjectFactory(Factory):
+    _objects = [Cow]
+
+    def __init__(self, groundsize):
+        self.half = groundsize / 2
+
+    def createObject(self):
+        x = random.randrange(-self.half, self.half)
+        y = random.randrange(-self.half, self.half)
+        direction = random.randrange(360)
+        return self._objects[random.randrange(len(self._objects))](x, y, direction)
     
     
-class PlayerFactory(ObjectFactory):
-    def CreateObject(self):
+class PlayerFactory(Factory):
+    def createObject(self):
 	    return Player()
