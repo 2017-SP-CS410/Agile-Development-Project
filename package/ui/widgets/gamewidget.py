@@ -7,7 +7,7 @@ from PyQt5.QtMultimedia import QSound
 from PyQt5.QtOpenGL     import QGLWidget
 from PyQt5.QtGui     import QMatrix4x4, QVector3D
 from PyQt5.QtWidgets import QProgressBar, QPushButton, QLineEdit
-from .objects        import Ground, Movement, Player, Rotate, State, ObjectFactory
+from .objects        import Ground, Movement, PlayerFactory, Rotate, State, ObjectFactory
 from package.utilities.word import getFinalValue, makeWordList
 
 
@@ -55,18 +55,29 @@ class GameWidget(QGLWidget):
 
         self.backgroundMusic.setLoops(QSound.Infinite)
         self.score = 0
-        self.objectFactory = ObjectFactory(num_tiles)
         self.wordList = makeWordList()
 
 
     def initializeGround(self):
-        self.ground = Ground(self.num_tiles, self.restart)
+        self.ground = Ground(self.num_tiles, self.restart, self.light, self.ambient)
 
     def initializeObjects(self):
+        self.objectFactory = ObjectFactory(self.num_tiles, self.light, self.ambient)
         self.objects = [self.objectFactory.createObject() for i in range(10)]
 
     def initializePlayer(self):
-        self.player = Player()
+        self.playerFactory = PlayerFactory(self.light, self.ambient)
+        self.player = self.playerFactory.createObject()
+
+    def initializeVariables(self):
+        # camera
+        self.camera = QMatrix4x4()
+        self.camera.perspective(60, 4.0/3.0, 0.1, 100.0)
+        self.camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
+        # light
+        self.light = QVector3D(0, 0, 20)
+        # ambient intensity
+        self.ambient = 0.75
 
     def keyPressEvent(self, event):
         key = event.text()
@@ -94,6 +105,7 @@ class GameWidget(QGLWidget):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
         glEnable(GL_PRIMITIVE_RESTART)
+        self.initializeVariables()
         self.initializeGround()
         self.initializePlayer()
         self.initializeObjects()
@@ -155,8 +167,8 @@ class GameWidget(QGLWidget):
 
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        self.player.render()
         self.ground.render()
+        self.player.render()
         for o in self.objects:
             o.render()
 
@@ -165,12 +177,8 @@ class GameWidget(QGLWidget):
 
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
-        # create the camera
-        camera = QMatrix4x4()
-        camera.perspective(60, 4.0/3.0, 0.1, 100.0)
-        camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
         # resize all the drawable objects
-        self.player.resize(camera)
-        self.ground.resize(camera)
+        self.ground.resize(self.camera)
+        self.player.resize(self.camera)
         for o in self.objects:
-            o.resize(camera)
+            o.resize(self.camera)

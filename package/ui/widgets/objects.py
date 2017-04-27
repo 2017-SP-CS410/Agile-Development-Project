@@ -30,9 +30,9 @@ class State(Enum):
 
 class Drawable:
 
-    def __init__(self):
+    def __init__(self, lightpos, ambient):
         self.model = QMatrix4x4()
-        self.initializeGL()
+        self.initializeGL(lightpos, ambient)
 
     def byteData(self, data):
         return data
@@ -40,7 +40,7 @@ class Drawable:
     def byteSize(self, data):
         return data.nbytes
 
-    def initializeGL(self):
+    def initializeGL(self, lightpos, ambient):
         # create Vertex Array Object on the GPU
         self.vao = glGenVertexArrays(1)
         glBindVertexArray(self.vao)
@@ -76,6 +76,10 @@ class Drawable:
             0,
             c_void_p(0)
         )
+        lightposAttr = glGetUniformLocation(self.program, 'lightPos')
+        glUniform3f(lightposAttr, lightpos.x(), lightpos.y(), lightpos.z())
+        ambientAttr = glGetUniformLocation(self.program, 'ambient')
+        glUniform1f(ambientAttr, ambient)
         self.projectionMatrix = glGetUniformLocation(self.program, 'projection')
         self.modelMatrix = glGetUniformLocation(self.program, 'model')
 
@@ -142,23 +146,25 @@ class Ground(Drawable):
         out vec3 fcolor;
         void main()
         {
-           gl_Position = projection * vec4(position, 1.0);
-           fcolor = color;
+          gl_Position = projection * vec4(position, 1.0);
+          fcolor = color;
         }\
     """)
     fs_source = dedent("""
         #version 330
+        uniform vec3 lightPos;
+        uniform float ambient;
         in vec3 fcolor;
         void main()
         {
-           gl_FragColor = vec4(fcolor, 1.0);
+          gl_FragColor = vec4(ambient * fcolor, 1.0);
         }\
     """)
 
-    def __init__(self, n, restart):
+    def __init__(self, n, restart, *args, **kwargs):
         self.elements = GL_TRIANGLE_FAN
         self.generateData(n, restart)
-        super(Ground, self).__init__()
+        super(Ground, self).__init__(*args, **kwargs)
 
     def byteData(self, data):
         return data.tostring()
@@ -253,8 +259,8 @@ class Ground(Drawable):
             x += 1
         self.faces.pop()
 
-    def initializeGL(self):
-        super(Ground, self).initializeGL()
+    def initializeGL(self, *args, **kwargs):
+        super(Ground, self).initializeGL(*args, **kwargs)
         colorBuffer = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, colorBuffer)
         glBufferData(
@@ -288,21 +294,24 @@ class LoadableObject(Drawable):
         in vec3 position;
         void main()
         {
-           gl_Position = projection * model * vec4(position, 1.0);
+          gl_Position = projection * model * vec4(position, 1.0);
         }\
     """)
     fs_source = dedent("""
         #version 330
+        uniform vec3 lightPos;
+        uniform float ambient;
         void main()
         {
-           gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+          vec3 color = vec3(1.0, 1.0, 1.0);
+          gl_FragColor = vec4(ambient * color, 1.0);
         }\
     """)
 
-    def __init__(self, filename, x=0, y=0, direction=0):
+    def __init__(self, filename, x, y, direction, *args, **kwargs):
         self.elements = GL_TRIANGLES
         self.loadObject(filename)
-        super(LoadableObject, self).__init__()
+        super(LoadableObject, self).__init__(*args, **kwargs)
         self.model.rotate(90, 1, 0, 0)
         self.model.translate(x, 0.5, y)
         self.model.rotate(direction, 0, 1, 0)
@@ -331,8 +340,8 @@ class LoadableObject(Drawable):
 	
     
 class TypeableObject(LoadableObject):
-    def __init__(self, filename, x, y, direction):
-	    super(TypeableObject, self).__init__(filename, x, y, direction)
+    def __init__(self, *args, **kwargs):
+	    super(TypeableObject, self).__init__(*args, **kwargs)
 	    # TODO: get word and score from word bank
 	
     def destroy(self):
@@ -342,14 +351,15 @@ class TypeableObject(LoadableObject):
 	
     
 class Cow(TypeableObject):
-    def __init__(self, x, y, direction):
+    def __init__(self, *args, **kwargs):
         model = 'package/assets/models/cow.obj'
-        super(Cow, self).__init__(model, x, y, direction)
+        super(Cow, self).__init__(model, *args, **kwargs)
 	
 	
 class Player(LoadableObject):
-    def __init__(self):
-        super(Player, self).__init__('package/assets/models/player.obj')
+    def __init__(self, *args, **kwargs):
+        model = 'package/assets/models/player.obj'
+        super(Player, self).__init__(model, *args, **kwargs)
         self.vx = 0
         self.vy = 0
         self.theta = 0
@@ -360,23 +370,32 @@ class Player(LoadableObject):
     
 # The Abstract Factory
 class Factory:
-    def CreateObject(self): pass
+    def createObject(self): pass
+
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
 	
 
 # Concrete factories:
 class ObjectFactory(Factory):
     _objects = [Cow]
 
-    def __init__(self, groundsize):
+    def __init__(self, groundsize, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.half = groundsize / 2
 
     def createObject(self):
         x = random.randrange(-self.half, self.half)
         y = random.randrange(-self.half, self.half)
         direction = random.randrange(360)
-        return self._objects[random.randrange(len(self._objects))](x, y, direction)
+        o = self._objects[random.randrange(len(self._objects))]
+        return o(x, y, direction, *self.args, **self.kwargs)
     
     
 class PlayerFactory(Factory):
     def createObject(self):
-	    return Player()
+        x = 0
+        y = 0
+        direction = 0
+        return Player(x, y, direction, *self.args, **self.kwargs)
