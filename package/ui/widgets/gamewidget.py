@@ -91,7 +91,6 @@ class GameWidget(QGLWidget):
         elif key in ['a', 'd']:
             self.player.rotate = Rotate.none
 
-
     def initializeGL(self):
         glEnable(GL_DEPTH_TEST)
         glPrimitiveRestartIndex(self.restart)
