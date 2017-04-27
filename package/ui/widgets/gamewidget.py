@@ -71,23 +71,23 @@ class GameWidget(QGLWidget):
     def keyPressEvent(self, event):
         key = event.text()
         if key == 'w':
-            self.character.move = Movement.forward
+            self.player.move = Movement.forward
         elif key == 'a':
-            self.character.rotate = Rotate.right
+            self.player.rotate = Rotate.right
         elif key == 's':
-            self.character.move = Movement.backward
+            self.player.move = Movement.backward
         elif key == 'd':
-            self.character.rotate = Rotate.left
+            self.player.rotate = Rotate.left
         elif key == ' ':
-            if self.character.state == State.moving:
-                self.character.move = State.typing
-            elif self.character.state == State.typing:
-                self.character.move = State.moving
+            if self.player.state == State.moving:
+                self.player.move = State.typing
+            elif self.player.state == State.typing:
+                self.player.move = State.moving
 
     def keyReleaseEvent(self, event):
         key = event.text()
         if key in ['w', 'a', 's', 'd']:
-            self.character.move = Movement.none
+            self.player.move = Movement.none
 
 
     def initializeGL(self):
