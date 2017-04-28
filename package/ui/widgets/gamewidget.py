@@ -58,17 +58,18 @@ class GameWidget(QGLWidget):
         self.objectFactory = ObjectFactory(num_tiles)
         self.wordList = makeWordList()
 
-
     def initializeGround(self):
         self.ground = Ground(self.num_tiles, self.restart)
 
     def initializeObjects(self):
-        self.objects = [self.objectFactory.createObject() for i in range(10)]
+        self.objects = [self.objectFactory.createObject() for i in range(1)]
 
     def initializePlayer(self):
         self.player = Player()
 
     def keyPressEvent(self, event):
+        self.objects.append(self.objectFactory.createObject())
+        self.repaint()
         key = event.text()
         if key == 'w':
             self.player.movement = Movement.forward
@@ -100,7 +101,7 @@ class GameWidget(QGLWidget):
         self.initializeObjects()
         self.playMusic()
         self.clockStart()
-        #self.typeBox()
+        # self.typeBox()
         self.initializeTimer()
         self.makeScoreLabel()
 
@@ -118,7 +119,12 @@ class GameWidget(QGLWidget):
             self.timer.stop()
             return
         self.step -= 1 / 60
-        #if (self.readbox.text() == self.textbox.text()):
+        # if self.last - int(self.step) == self.check:
+        #     self.last = int(self.step)
+        #     self.check = randint(2, 5)
+        #     if len(self.objects) < 10:
+        #         self.objects.append(self.objectFactory.createObject())
+        # if (self.readbox.text() == self.textbox.text()):
         #    self.textbox.setText("")
         self.btn.setText("Time is: " + str(int((self.step))))
         self.scoreLabel.setText("Score: " + str(int(self.score)))
@@ -128,7 +134,7 @@ class GameWidget(QGLWidget):
 
     def wordCompleted(self, word):
         self.score += getFinalValue(word)
-        self.scoreLabel.setText("Score: " + self.score)
+        self.scoreLabel.setText("Score: " + str(self.score))
 
     def typeBox(self):
         ran = randint(0, len(self.wordList))
@@ -150,6 +156,8 @@ class GameWidget(QGLWidget):
         self.timer = QBasicTimer()
         self.timer.start(50/3, self)
         self.step = 120
+        self.check = randint(2, 5)
+        self.last = 120
 
     def makeScoreLabel(self):
         self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
