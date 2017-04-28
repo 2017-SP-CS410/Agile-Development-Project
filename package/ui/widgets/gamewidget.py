@@ -1,3 +1,4 @@
+import math
 import os
 from random             import randrange, randint
 from OpenGL.GL          import *
@@ -27,6 +28,7 @@ class GameWidget(QGLWidget):
 
     def __init__(self, num_tiles=20, num_objects=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.vicinity = 1
         self.setMinimumSize(640, 480)
         self.num_tiles = num_tiles
         self.num_objects = num_objects
@@ -63,7 +65,7 @@ class GameWidget(QGLWidget):
         self.ground = Ground(self.num_tiles, self.restart)
 
     def initializeObjects(self):
-        self.objects = [self.objectFactory.createObject() for i in range(10)]
+        self.objects = [self.objectFactory.createObject() for i in range(1)]
 
     def initializePlayer(self):
         self.player = Player()
@@ -124,6 +126,14 @@ class GameWidget(QGLWidget):
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(int(self.step / 1.2))
         self.player.move()
+        dist = math.inf
+        obj = None
+        for o in self.objects:
+            dist = min(dist, self.player.dist(o))
+            obj = o
+        if dist < self.vicinity:
+            pass
+            # TODO: visually designated obj as typable
         self.update()
 
     def wordCompleted(self, word):

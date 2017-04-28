@@ -8,7 +8,7 @@ from pyassimp    import load
 from textwrap    import dedent
 from OpenGL.GL   import *
 from OpenGL.GLU  import *
-from PyQt5.QtGui import QMatrix4x4
+from PyQt5.QtGui import QMatrix4x4, QVector4D
 
 
 class Movement(Enum):
@@ -33,6 +33,7 @@ class Drawable:
     def __init__(self):
         self.model = QMatrix4x4()
         self.initializeGL()
+        self.updatePosition()
 
     def byteData(self, data):
         return data
@@ -119,6 +120,7 @@ class Drawable:
         )
 
     def loadModelMatrix(self):
+        self.updatePosition()
         glUseProgram(self.program)
         glUniformMatrix4fv(
             self.modelMatrix,
@@ -136,6 +138,9 @@ class Drawable:
             array('f', projection.data()).tostring()
         )
         self.loadModelMatrix()
+
+    def updatePosition(self):
+        self.position = (self.model * QVector4D(0, 0, 0, 1)).toVector3D()
 
 
 class Ground(Drawable):
@@ -392,6 +397,9 @@ class Player(LoadableObject):
                 self.theta += self.dTheta
                 self.model.rotate(self.dTheta, 0, 1, 0)
             self.loadModelMatrix()
+
+    def dist(self, o):
+        return self.position.distanceToPoint(o.position)
 
 
 # The Abstract Factory
