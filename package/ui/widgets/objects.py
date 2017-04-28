@@ -40,6 +40,9 @@ class Drawable:
     def byteSize(self, data):
         return data.nbytes
 
+    def destroy(self):
+        glDeleteBuffers(2, [vertexBuffer, faceBuffer])
+
     def initializeGL(self):
         # create Vertex Array Object on the GPU
         self.vao = glGenVertexArrays(1)
