@@ -8,7 +8,7 @@ from pyassimp    import load
 from textwrap    import dedent
 from OpenGL.GL   import *
 from OpenGL.GLU  import *
-from PyQt5.QtGui import QMatrix4x4
+from PyQt5.QtGui import QMatrix4x4, QVector4D
 
 
 class Movement(Enum):
@@ -33,6 +33,7 @@ class Drawable:
     def __init__(self):
         self.model = QMatrix4x4()
         self.initializeGL()
+        self.updatePosition()
 
     def byteData(self, data):
         return data
@@ -119,6 +120,7 @@ class Drawable:
         )
 
     def loadModelMatrix(self):
+        self.updatePosition()
         glUseProgram(self.program)
         glUniformMatrix4fv(
             self.modelMatrix,
@@ -136,6 +138,9 @@ class Drawable:
             array('f', projection.data()).tostring()
         )
         self.loadModelMatrix()
+
+    def updatePosition(self):
+        self.position = (self.model * QVector4D(0, 0, 0, 1)).toVector3D()
 
 
 class Ground(Drawable):
@@ -313,22 +318,23 @@ class LoadableObject(Drawable):
         self.model.translate(x, 0.5, y)
         self.model.rotate(direction, 0, 1, 0)
 
-    def loadObject(self, filename):
+    def loadObject(self, filename, heightoff=False):
         mesh = load(filename).meshes[0]
         self.vertices = mesh.vertices
         min_x = inf
         max_x = -inf
-        min_y = inf
-        max_y = -inf
         min_z = inf
         max_z = -inf
+        min_y = 0 if heightoff else inf
+        max_y = 0 if heightoff else -inf
         for x, y, z in self.vertices:
             min_x = min(x, min_x)
             max_x = max(x, max_x)
-            min_y = min(y, min_y)
-            max_y = max(y, max_y)
             min_z = min(z, min_z)
             max_z = max(z, max_z)
+            if not heightoff:
+                min_y = min(y, min_y)
+                max_y = max(y, max_y)
         diff = max(max_x-min_x, max_y-min_y, max_z-min_z)
         for v in self.vertices:
             v /= (diff/2)
@@ -351,6 +357,21 @@ class Cow(TypeableObject):
     def __init__(self, x, y, direction):
         model = 'package/assets/models/cow.obj'
         super(Cow, self).__init__(model, x, y, direction)
+
+    
+class Bear(TypeableObject):
+    def __init__(self, x, y, direction):
+        model = 'package/assets/models/bear.obj'
+        super(Bear, self).__init__(model, x, y, direction)
+
+
+class Giraffe(TypeableObject):
+    def __init__(self, x, y, direction):
+        model = 'package/assets/models/dirtyGiraffe.obj'
+        super(Giraffe, self).__init__(model, x, y, direction)
+
+    def loadObject(self, filename):
+        super(Giraffe, self).loadObject(filename, heightoff=True)
 
 
 class Player(LoadableObject):
@@ -377,6 +398,9 @@ class Player(LoadableObject):
                 self.model.rotate(self.dTheta, 0, 1, 0)
             self.loadModelMatrix()
 
+    def dist(self, o):
+        return self.position.distanceToPoint(o.position)
+
 
 # The Abstract Factory
 class Factory:
@@ -385,7 +409,7 @@ class Factory:
 
 # Concrete factories:
 class ObjectFactory(Factory):
-    _objects = [Cow]
+    _objects = [Cow, Bear, Giraffe]
 
     def __init__(self, groundsize):
         self.half = groundsize / 2
