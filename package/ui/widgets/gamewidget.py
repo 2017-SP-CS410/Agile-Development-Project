@@ -28,6 +28,7 @@ class GameWidget(QGLWidget):
 
     def __init__(self, num_tiles=20, num_objects=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.vicinity = 1
         self.setMinimumSize(640, 480)
         self.num_tiles = num_tiles
@@ -136,10 +137,6 @@ class GameWidget(QGLWidget):
             # TODO: visually designated obj as typable
         self.update()
 
-    def __init__(self, n=10, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setMinimumSize(640, 480)
-
     def checkSpell(self):
         correctWord = self.readbox.text()
         inputWord = self.textbox.text()
@@ -151,36 +148,19 @@ class GameWidget(QGLWidget):
                 self.textbox.setStyleSheet('color: yellow; \
                                                 background-color: black; \
                                                 border-color: black;')
-                # print(inputChar)
-                # print("Yellow")
-
                 if inputWord == correctWord:
-                    print('above')
                     self.wordCompleted(correctWord)
-                    print('below')
-
                     self.textbox.setStyleSheet('color: green; \
                                                 background-color: black; \
                                                 border-color: black;')
-                    # print("Green")
-                    # Close player interaction? Score?
-
                     self.readbox.close()
                     self.textbox.close()
                     self.check = False
-                    # self.score += getFinalValue(correctWord)
-                    # self.scoreLabel.setText("Score: " + self.score)
             else:
                 self.textbox.setStyleSheet('color: red; \
                                                 background-color: black; \
                                                 border-color: black;')
                 failCount += 1
-                # print(inputChar + " Wrong!")
-
-    # print("Red")
-    def timerEvent(self, e):
-        self.pbar.setValue(int(self.step / 1.2))
-
 
     def wordCompleted(self, word):
         print("init")
