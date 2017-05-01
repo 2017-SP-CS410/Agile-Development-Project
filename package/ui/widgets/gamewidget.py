@@ -1,6 +1,6 @@
 import math
 import os
-from random             import randrange, randint
+from random             import randrange, randint, random
 from OpenGL.GL          import *
 from OpenGL.GLU         import *
 from PyQt5.QtCore       import QBasicTimer
@@ -136,25 +136,79 @@ class GameWidget(QGLWidget):
             # TODO: visually designated obj as typable
         self.update()
 
+    def __init__(self, n=10, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setMinimumSize(640, 480)
+
+    def checkSpell(self):
+        correctWord = self.readbox.text()
+        inputWord = self.textbox.text()
+        failCount = 0
+
+        for inputChar, correctChar in zip(correctWord, inputWord):
+            if inputChar == correctChar and failCount == 0:
+
+                self.textbox.setStyleSheet('color: yellow; \
+                                                background-color: black; \
+                                                border-color: black;')
+                # print(inputChar)
+                # print("Yellow")
+
+                if inputWord == correctWord:
+                    print('above')
+                    self.wordCompleted(correctWord)
+                    print('below')
+
+                    self.textbox.setStyleSheet('color: green; \
+                                                background-color: black; \
+                                                border-color: black;')
+                    # print("Green")
+                    # Close player interaction? Score?
+
+                    self.readbox.close()
+                    self.textbox.close()
+                    self.check = False
+                    # self.score += getFinalValue(correctWord)
+                    # self.scoreLabel.setText("Score: " + self.score)
+            else:
+                self.textbox.setStyleSheet('color: red; \
+                                                background-color: black; \
+                                                border-color: black;')
+                failCount += 1
+                # print(inputChar + " Wrong!")
+
+    # print("Red")
+    def timerEvent(self, e):
+        self.pbar.setValue(int(self.step / 1.2))
+
+
     def wordCompleted(self, word):
+        print("init")
         self.score += getFinalValue(word)
         self.scoreLabel.setText("Score: " + self.score)
+        self.scoreLabel.setText("Score: " + str(self.score))
 
     def typeBox(self):
-        ran = randint(0, len(self.wordList))
+        self.check = True
+        ran = random.randint(0, len(self.wordList))
         word = self.wordList[ran]
         value = getFinalValue(word)
         self.readbox = QLineEdit(self)
+        print("Build the text box")
         self.readbox.setText(word)
-        self.readbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.readbox.setStyleSheet("background-color: black; color: white; border-color: black;")
         self.readbox.setReadOnly(True)
         self.readbox.move(0, 420)
         self.readbox.resize(640, 30)
         self.textbox = QLineEdit(self)
-        self.textbox.setStyleSheet("background-color: black; color: red; border-color: black;")
+        self.textbox.setStyleSheet("background-color: black; color: white; border-color: black;")
         self.textbox.move(0, 450)
         self.textbox.setFocus()
         self.textbox.resize(640, 30)
+        self.repaint()
+        self.readbox.show()
+
+        self.textbox.show()
 
     def clockStart(self):
         self.timer = QBasicTimer()
