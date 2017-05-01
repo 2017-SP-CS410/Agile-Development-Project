@@ -60,6 +60,7 @@ class GameWidget(QGLWidget):
         self.score = 0
         self.objectFactory = ObjectFactory(num_tiles)
         self.wordList = makeWordList()
+        self.close = False
 
 
     def initializeGround(self):
@@ -81,9 +82,10 @@ class GameWidget(QGLWidget):
             self.player.movement = Movement.backward
         elif key == 'd':
             self.player.rotate = Rotate.left
-        elif key == ' ':
+        elif key == ' ' and self.close == True:
             if self.player.state == State.moving:
                 self.player.movement = State.typing
+                self.typeBox()
             elif self.player.state == State.typing:
                 self.player.movement = State.moving
 
@@ -127,15 +129,19 @@ class GameWidget(QGLWidget):
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(int(self.step / 1.2))
         self.player.move()
+        self.getVicinity()
+        self.update()
+
+    def getVicinity(self):
+        self.close = False
         dist = math.inf
         obj = None
         for o in self.objects:
             dist = min(dist, self.player.dist(o))
             obj = o
         if dist < self.vicinity:
-            pass
             # TODO: visually designated obj as typable
-        self.update()
+            self.close = True
 
     def checkSpell(self):
         correctWord = self.readbox.text()
@@ -187,7 +193,6 @@ class GameWidget(QGLWidget):
         self.textbox.resize(640, 30)
         self.repaint()
         self.readbox.show()
-
         self.textbox.show()
 
     def clockStart(self):
@@ -216,7 +221,7 @@ class GameWidget(QGLWidget):
         camera = QMatrix4x4()
         camera.perspective(60, 4.0/3.0, 0.1, 100.0)
         camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
-        # resize all the drawable objects
+        # resize all the drawable f
         self.player.resize(camera)
         self.ground.resize(camera)
         for o in self.objects:
