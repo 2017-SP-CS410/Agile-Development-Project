@@ -70,7 +70,6 @@ class GameWidget(QGLWidget):
         self.player = Player()
 
     def keyPressEvent(self, event):
-        self.objects.append(self.objectFactory.createObject())
         self.repaint()
         key = event.text()
         if key == 'w':
@@ -121,14 +120,15 @@ class GameWidget(QGLWidget):
             self.timer.stop()
             return
         self.step -= 1 / 60
-        # if self.last - int(self.step) == self.check:
-        #     self.last = int(self.step)
-        #     self.check = randint(2, 5)
-        #     if len(self.objects) < 10:
-        #         self.objects.append(self.objectFactory.createObject())
+        if self.last - int(self.step) == self.check:
+            self.last = int(self.step)
+            self.check = randint(2, 5)
+            if len(self.objects) < 10:
+                self.objects.append(self.objectFactory.createObject())
+                self.resize()
         # if (self.readbox.text() == self.textbox.text()):
         #    self.textbox.setText("")
-        self.btn.setText("Time is: " + str(int((self.step))))
+        self.btn.setText("Time is: " + str(int(self.step)))
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(int(self.step / 1.2))
         self.player.move()
@@ -187,11 +187,13 @@ class GameWidget(QGLWidget):
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
         # create the camera
-        camera = QMatrix4x4()
-        camera.perspective(60, 4.0/3.0, 0.1, 100.0)
-        camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
-        # resize all the drawable objects
-        self.player.resize(camera)
-        self.ground.resize(camera)
+        self.camera = QMatrix4x4()
+        self.camera.perspective(60, 4.0/3.0, 0.1, 100.0)
+        self.camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
+        self.resize()
+
+    def resize(self):
+        self.player.resize(self.camera)
+        self.ground.resize(self.camera)
         for o in self.objects:
-            o.resize(camera)
+            o.resize(self.camera)
