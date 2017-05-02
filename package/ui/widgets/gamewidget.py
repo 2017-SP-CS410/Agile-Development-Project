@@ -138,15 +138,16 @@ class GameWidget(QGLWidget):
 
     def getVicinity(self):
         dist = math.inf
-        obj = None
+        self.obj = None
         for o in self.objects:
             dist = min(dist, self.player.dist(o))
-            obj = o
+            self.obj = o
         if dist < self.vicinity:
             self.close = True
         if self.complete == True:
-            print(obj)
-            obj.destroy()
+            print(self.obj)
+            self.obj.destroy()
+            #self.ob] = None
             self.complete = False
             print("well Fuck")
 
@@ -173,6 +174,8 @@ class GameWidget(QGLWidget):
                     self.check = False
                     self.complete = True
                     print("IT GOT HERE")
+                    self.obj.destroy()
+                    #self.obj = None
             else:
                 self.textbox.setStyleSheet('color: red; \
                                                 background-color: black; \
@@ -201,6 +204,7 @@ class GameWidget(QGLWidget):
         self.textbox = QLineEdit(self)
         self.textbox.setStyleSheet("background-color: black; color: white; border-color: black;")
         self.textbox.move(0, 450)
+        self.textbox.resize(640,30)
         self.textbox.setFocus()
         self.repaint()
         self.readbox.show()
