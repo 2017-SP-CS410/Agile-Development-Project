@@ -340,40 +340,40 @@ class LoadableObject(Drawable):
             v /= (diff/2)
 
         self.faces = mesh.faces
-	
-    
+
+
 class TypeableObject(LoadableObject):
     def __init__(self, filename, x, y, direction):
-	    super(TypeableObject, self).__init__(filename, x, y, direction)
-	    # TODO: get word and score from word bank
-	
+        super(TypeableObject, self).__init__(filename, x, y, direction)
+        # TODO: get word and score from word bank
+
     def destroy(self):
-	    pass
-	    # TODO: play destroy sound
-	    # TODO: remove from world
-	
-    
+        pass
+        # TODO: play destroy sound
+        # TODO: remove from world
+
+
 class Cow(TypeableObject):
     def __init__(self, x, y, direction):
         model = 'package/assets/models/cow.obj'
         super(Cow, self).__init__(model, x, y, direction)
-	
+
     
 class Bear(TypeableObject):
     def __init__(self, x, y, direction):
         model = 'package/assets/models/bear.obj'
         super(Bear, self).__init__(model, x, y, direction)
-	
-    
+
+
 class Giraffe(TypeableObject):
     def __init__(self, x, y, direction):
         model = 'package/assets/models/dirtyGiraffe.obj'
         super(Giraffe, self).__init__(model, x, y, direction)
 
     def loadObject(self, filename):
-	    super(Giraffe, self).loadObject(filename, heightoff=True)
-	
-	
+        super(Giraffe, self).loadObject(filename, heightoff=True)
+
+
 class Player(LoadableObject):
     def __init__(self):
         super(Player, self).__init__('package/assets/models/player.obj')
@@ -424,4 +424,4 @@ class ObjectFactory(Factory):
     
 class PlayerFactory(Factory):
     def createObject(self):
-	    return Player()
+        return Player()

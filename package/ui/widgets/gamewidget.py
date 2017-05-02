@@ -66,7 +66,6 @@ class GameWidget(QGLWidget):
         self.wordList = makeWordList()
 
 
-
     def initializeGround(self):
         self.ground = Ground(self.num_tiles, self.restart)
 
@@ -77,6 +76,7 @@ class GameWidget(QGLWidget):
         self.player = Player()
 
     def keyPressEvent(self, event):
+        self.repaint()
         key = event.text()
         if key == 'w':
             self.player.movement = Movement.forward
@@ -109,7 +109,7 @@ class GameWidget(QGLWidget):
         self.initializeObjects()
         self.playMusic()
         self.clockStart()
-        #self.typeBox()
+        # self.typeBox()
         self.initializeTimer()
         self.makeScoreLabel()
 
@@ -127,9 +127,21 @@ class GameWidget(QGLWidget):
             self.timer.stop()
             return
         self.step -= 1 / 60
+<<<<<<< HEAD
         if(self.check == True):
             self.checkSpell()
         self.btn.setText("Time is: " + str(int((self.step))))
+=======
+        if self.last - int(self.step) == self.check:
+            self.last = int(self.step)
+            self.check = randint(2, 5)
+            if len(self.objects) < 10:
+                self.objects.append(self.objectFactory.createObject())
+                self.resize()
+        # if (self.readbox.text() == self.textbox.text()):
+        #    self.textbox.setText("")
+        self.btn.setText("Time is: " + str(int(self.step)))
+>>>>>>> origin/#61-vicinity-typebox
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(int(self.step / 1.2))
         self.player.move()
@@ -183,12 +195,17 @@ class GameWidget(QGLWidget):
                 failCount += 1
 
     def wordCompleted(self, word):
+<<<<<<< HEAD
         print(word)
         self.score += getFinalValue(word)
         print(self.score)
         print(getFinalValue(word))
         #self.scoreLabel.setText("Score: " + self.score)
         self.scoreLabel.setText("Score: " + str(self.score/len(word)))
+=======
+        self.score += getFinalValue(word)
+        self.scoreLabel.setText("Score: " + str(self.score))
+>>>>>>> origin/#61-vicinity-typebox
 
     def typeBox(self):
         self.check = True
@@ -214,6 +231,8 @@ class GameWidget(QGLWidget):
         self.timer = QBasicTimer()
         self.timer.start(50/3, self)
         self.step = 120
+        self.check = randint(2, 5)
+        self.last = 120
 
     def makeScoreLabel(self):
         self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
@@ -233,11 +252,13 @@ class GameWidget(QGLWidget):
     def resizeGL(self, width, height):
         glViewport(0, 0, width, height)
         # create the camera
-        camera = QMatrix4x4()
-        camera.perspective(60, 4.0/3.0, 0.1, 100.0)
-        camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
-        # resize all the drawable f
-        self.player.resize(camera)
-        self.ground.resize(camera)
+        self.camera = QMatrix4x4()
+        self.camera.perspective(60, 4.0/3.0, 0.1, 100.0)
+        self.camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
+        self.resize()
+
+    def resize(self):
+        self.player.resize(self.camera)
+        self.ground.resize(self.camera)
         for o in self.objects:
-            o.resize(camera)
+            o.resize(self.camera)
