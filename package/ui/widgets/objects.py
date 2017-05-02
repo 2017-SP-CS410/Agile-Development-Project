@@ -4,7 +4,7 @@ from array       import array
 from ctypes      import c_void_p
 from enum        import Enum
 from math import pi, cos, sin, inf
-from pyassimp    import load
+from pyassimp    import load, release
 from textwrap    import dedent
 from OpenGL.GL   import *
 from OpenGL.GLU  import *
@@ -319,7 +319,8 @@ class LoadableObject(Drawable):
         self.model.rotate(direction, 0, 1, 0)
 
     def loadObject(self, filename, heightoff=False):
-        mesh = load(filename).meshes[0]
+        self.scene = load(filename)
+        mesh = self.scene.meshes[0]
         self.vertices = mesh.vertices
         min_x = inf
         max_x = -inf
@@ -348,7 +349,7 @@ class TypeableObject(LoadableObject):
         # TODO: get word and score from word bank
 
     def destroy(self):
-        pass
+        release(self.scene)
         # TODO: play destroy sound
         # TODO: remove from world
 
