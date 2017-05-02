@@ -397,6 +397,12 @@ class Player(LoadableObject):
             elif self.rotate == Rotate.right:
                 self.theta += self.dTheta
                 self.model.rotate(self.dTheta, 0, 1, 0)
+            translate = self.model.column(3)
+            x = max(min(translate.x(), 9), -9)
+            y = max(min(translate.y(), 9), -9)
+            translate.setX(x)
+            translate.setY(y)
+            self.model.setColumn(3, translate)
             self.loadModelMatrix()
 
     def dist(self, o):
