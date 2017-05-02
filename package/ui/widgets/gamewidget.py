@@ -1,5 +1,6 @@
 import math
 import os
+
 from random             import randrange, randint
 from OpenGL.GL          import *
 from OpenGL.GLU         import *
@@ -29,11 +30,15 @@ class GameWidget(QGLWidget):
     def __init__(self, num_tiles=20, num_objects=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.vicinity = 1
+        self.vicinity = 2
         self.setMinimumSize(640, 480)
         self.num_tiles = num_tiles
         self.num_objects = num_objects
         self.restart = 0xFFFFFFFF
+        self.close = False
+        self.check = False
+        self.complete = False
+
 
         package_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -60,7 +65,7 @@ class GameWidget(QGLWidget):
         self.score = 0
         self.objectFactory = ObjectFactory(num_tiles)
         self.wordList = makeWordList()
-        self.close = False
+
 
     def initializeGround(self):
         self.ground = Ground(self.num_tiles, self.restart)
@@ -111,7 +116,7 @@ class GameWidget(QGLWidget):
 
     def initializeTimer(self):
         self.pbar = QProgressBar(self)
-        self.pbar.setGeometry(30, 40, 200, 25)
+        self.pbar.setGeometry(20, 10, 200, 25)
         self.pbar.setValue(int(self.step/1.2))
         self.btn = QPushButton("Time is: " + str(int(self.step)), self)
         self.btn.setStyleSheet("background-color: black; color: red;")
@@ -123,15 +128,21 @@ class GameWidget(QGLWidget):
             self.timer.stop()
             return
         self.step -= 1 / 60
-        if self.last - int(self.step) == self.check:
-            self.last = int(self.step)
-            self.check = randint(2, 5)
-            if len(self.objects) < 10:
-                self.objects.append(self.objectFactory.createObject())
-                self.resize()
-        # if (self.readbox.text() == self.textbox.text()):
-        #    self.textbox.setText("")
-        self.btn.setText("Time is: " + str(int(self.step)))
+
+        if(self.check == True):
+            self.checkSpell()
+        self.btn.setText("Time is: " + str(int((self.step))))
+
+        # if self.last - int(self.step) == self.check:
+        #     self.last = int(self.step)
+        #     self.check = randint(2, 5)
+        #     if len(self.objects) < 10:
+        #         self.objects.append(self.objectFactory.createObject())
+        #         self.resize()
+        # # if (self.readbox.text() == self.textbox.text()):
+        # #    self.textbox.setText("")
+        # self.btn.setText("Time is: " + str(int(self.step)))
+
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(int(self.step / 1.2))
         self.player.move()
@@ -139,15 +150,19 @@ class GameWidget(QGLWidget):
         self.update()
 
     def getVicinity(self):
-        self.close = False
         dist = math.inf
-        obj = None
+        self.obj = None
         for o in self.objects:
             dist = min(dist, self.player.dist(o))
-            obj = o
+            self.obj = o
         if dist < self.vicinity:
-            # TODO: visually designated obj as typable
             self.close = True
+        if self.complete == True:
+            print(self.obj)
+            self.obj.destroy()
+            #self.ob] = None
+            self.complete = False
+
 
     def checkSpell(self):
         correctWord = self.readbox.text()
@@ -168,6 +183,10 @@ class GameWidget(QGLWidget):
                     self.readbox.close()
                     self.textbox.close()
                     self.check = False
+                    self.complete = True
+                    print("IT GOT HERE")
+                    self.obj.destroy()
+                    #self.obj = None
             else:
                 self.textbox.setStyleSheet('color: red; \
                                                 background-color: black; \
@@ -187,13 +206,13 @@ class GameWidget(QGLWidget):
         self.readbox.setText(word)
         self.readbox.setStyleSheet("background-color: black; color: white; border-color: black;")
         self.readbox.setReadOnly(True)
-        self.readbox.move(0, 420)
-        self.readbox.resize(640, 30)
+        self.readbox.move(0, self.height() - 60)
+        self.readbox.resize(self.width(), 30)
         self.textbox = QLineEdit(self)
         self.textbox.setStyleSheet("background-color: black; color: white; border-color: black;")
-        self.textbox.move(0, 450)
+        self.textbox.move(0, self.height() - 30)
+        self.textbox.resize(self.width(), 30)
         self.textbox.setFocus()
-        self.textbox.resize(640, 30)
         self.repaint()
         self.readbox.show()
         self.textbox.show()
@@ -204,6 +223,7 @@ class GameWidget(QGLWidget):
         self.step = 120
         self.check = randint(2, 5)
         self.last = 120
+
 
     def makeScoreLabel(self):
         self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)

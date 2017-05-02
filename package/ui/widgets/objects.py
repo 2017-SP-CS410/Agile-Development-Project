@@ -473,6 +473,7 @@ class ObjectFactory(Factory):
         y = random.randrange(-self.half, self.half)
         direction = random.randrange(360)
         return self._objects[random.randrange(len(self._objects))](x, y, direction)
+
     
     
 class PlayerFactory(Factory):

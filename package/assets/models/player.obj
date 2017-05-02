@@ -1,6 +1,6 @@
 # Blender v2.78 (sub 0) OBJ File: ''
 # www.blender.org
-mtllib player2.mtl
+mtllib player.mtl
 o Player
 v 0.370516 1.604497 0.353241
 v 0.329624 1.604497 0.339976

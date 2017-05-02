@@ -1,6 +1,6 @@
 # Blender v2.78 (sub 0) OBJ File: ''
 # www.blender.org
-mtllib bear2.mtl
+mtllib bear.mtl
 o Bear
 v -0.168442 1.652859 -0.496436
 v -0.117044 1.613682 -0.372350
