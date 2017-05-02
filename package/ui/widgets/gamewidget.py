@@ -127,21 +127,21 @@ class GameWidget(QGLWidget):
             self.timer.stop()
             return
         self.step -= 1 / 60
-<<<<<<< HEAD
+
         if(self.check == True):
             self.checkSpell()
         self.btn.setText("Time is: " + str(int((self.step))))
-=======
-        if self.last - int(self.step) == self.check:
-            self.last = int(self.step)
-            self.check = randint(2, 5)
-            if len(self.objects) < 10:
-                self.objects.append(self.objectFactory.createObject())
-                self.resize()
-        # if (self.readbox.text() == self.textbox.text()):
-        #    self.textbox.setText("")
-        self.btn.setText("Time is: " + str(int(self.step)))
->>>>>>> origin/#61-vicinity-typebox
+
+        # if self.last - int(self.step) == self.check:
+        #     self.last = int(self.step)
+        #     self.check = randint(2, 5)
+        #     if len(self.objects) < 10:
+        #         self.objects.append(self.objectFactory.createObject())
+        #         self.resize()
+        # # if (self.readbox.text() == self.textbox.text()):
+        # #    self.textbox.setText("")
+        # self.btn.setText("Time is: " + str(int(self.step)))
+
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(int(self.step / 1.2))
         self.player.move()
@@ -161,8 +161,6 @@ class GameWidget(QGLWidget):
             self.obj.destroy()
             #self.ob] = None
             self.complete = False
-            print("well Fuck")
-
 
 
     def checkSpell(self):
@@ -195,17 +193,8 @@ class GameWidget(QGLWidget):
                 failCount += 1
 
     def wordCompleted(self, word):
-<<<<<<< HEAD
-        print(word)
-        self.score += getFinalValue(word)
-        print(self.score)
-        print(getFinalValue(word))
-        #self.scoreLabel.setText("Score: " + self.score)
-        self.scoreLabel.setText("Score: " + str(self.score/len(word)))
-=======
         self.score += getFinalValue(word)
         self.scoreLabel.setText("Score: " + str(self.score))
->>>>>>> origin/#61-vicinity-typebox
 
     def typeBox(self):
         self.check = True
@@ -231,7 +220,7 @@ class GameWidget(QGLWidget):
         self.timer = QBasicTimer()
         self.timer.start(50/3, self)
         self.step = 120
-        self.check = randint(2, 5)
+        self.check = random.randint(2, 5)
         self.last = 120
 
     def makeScoreLabel(self):
