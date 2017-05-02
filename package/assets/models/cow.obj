@@ -1,6 +1,6 @@
 # Blender v2.78 (sub 0) OBJ File: ''
 # www.blender.org
-mtllib cow2.mtl
+mtllib cow.mtl
 o Suzanne
 v -0.036163 0.801069 0.763415
 v -0.030310 0.191893 0.703993

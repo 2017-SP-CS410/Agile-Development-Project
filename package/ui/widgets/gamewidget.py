@@ -1,6 +1,6 @@
 import math
 import os
-from random             import randrange, randint, random
+from random             import randrange, randint
 from OpenGL.GL          import *
 from OpenGL.GLU         import *
 from PyQt5.QtCore       import QBasicTimer
@@ -180,7 +180,7 @@ class GameWidget(QGLWidget):
 
     def typeBox(self):
         self.check = True
-        ran = random.randint(0, len(self.wordList))
+        ran = randint(0, len(self.wordList))
         word = self.wordList[ran]
         value = getFinalValue(word)
         self.readbox = QLineEdit(self)
