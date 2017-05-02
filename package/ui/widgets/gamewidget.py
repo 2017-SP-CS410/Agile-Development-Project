@@ -112,7 +112,7 @@ class GameWidget(QGLWidget):
 
     def initializeTimer(self):
         self.pbar = QProgressBar(self)
-        self.pbar.setGeometry(30, 40, 200, 25)
+        self.pbar.setGeometry(20, 10, 200, 25)
         self.pbar.setValue(int(self.step/1.2))
         self.btn = QPushButton("Time is: " + str(int(self.step)), self)
         self.btn.setStyleSheet("background-color: black; color: red;")
@@ -203,12 +203,12 @@ class GameWidget(QGLWidget):
         self.readbox.setText(word)
         self.readbox.setStyleSheet("background-color: black; color: white; border-color: black;")
         self.readbox.setReadOnly(True)
-        self.readbox.move(0, 420)
-        self.readbox.resize(640, 30)
+        self.readbox.move(0, self.height() - 60)
+        self.readbox.resize(self.width(), 30)
         self.textbox = QLineEdit(self)
         self.textbox.setStyleSheet("background-color: black; color: white; border-color: black;")
-        self.textbox.move(0, 450)
-        self.textbox.resize(640,30)
+        self.textbox.move(0, self.height() - 30)
+        self.textbox.resize(self.width(), 30)
         self.textbox.setFocus()
         self.repaint()
         self.readbox.show()
@@ -220,6 +220,7 @@ class GameWidget(QGLWidget):
         self.step = 120
         self.check = random.randint(2, 5)
         self.last = 120
+
 
     def makeScoreLabel(self):
         self.scoreLabel = QPushButton("Score: " + str(int(self.score)), self)
