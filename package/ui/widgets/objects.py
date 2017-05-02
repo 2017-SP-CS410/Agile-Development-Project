@@ -297,16 +297,32 @@ class LoadableObject(Drawable):
         uniform mat4 projection;
         uniform mat4 model;
         in vec3 position;
+        in vec3 normal;
+        out vec3 pos;
+        out vec3 norm;
         void main()
         {
-           gl_Position = projection * model * vec4(position, 1.0);
+            gl_Position = projection * model * vec4(position, 1.0);
+            pos = (model * vec4(position, 1.0)).xyz;
+            norm = normalize((transpose(inverse(model)) * vec4(normal, 0)).xyz);
         }\
     """)
     fs_source = dedent("""
         #version 330
+        uniform vec3 lightpos;
+        uniform vec3 camerapos;
+        in vec3 pos;
+        in vec3 norm;
         void main()
         {
-           gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            vec3 L = normalize(lightpos - pos);
+            vec3 R = reflect(L, norm);
+            vec3 V = normalize(pos - camerapos);
+            float ambient = 0.2;
+            float diff = 0.2 * clamp(dot(norm, L), 0, 1);
+            float spec = pow(0.2 * clamp(dot(R, V), 0, 1), 255);
+            vec3 c = vec3(1.0, 1.0, 1.0);
+            gl_FragColor = vec4((ambient + diff + spec) * c, 1.0);
         }\
     """)
 
@@ -317,6 +333,30 @@ class LoadableObject(Drawable):
         self.model.rotate(90, 1, 0, 0)
         self.model.translate(x, 0.5, y)
         self.model.rotate(direction, 0, 1, 0)
+
+    def initializeGL(self):
+        super(LoadableObject, self).initializeGL()
+        normalBuffer = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, normalBuffer)
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            self.byteSize(self.normals),
+            self.byteData(self.normals),
+            GL_STATIC_DRAW
+        )
+        glBindBuffer(GL_ARRAY_BUFFER, normalBuffer)
+        normal = glGetAttribLocation(self.program, 'normal')
+        glEnableVertexAttribArray(normal)
+        glVertexAttribPointer(
+            normal,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            c_void_p(0)
+        )
+        self.camera = glGetUniformLocation(self.program, 'camerapos')
+        self.light = glGetUniformLocation(self.program, 'lightpos')
 
     def loadObject(self, filename, heightoff=False):
         self.scene = load(filename)
@@ -341,6 +381,13 @@ class LoadableObject(Drawable):
             v /= (diff/2)
 
         self.faces = mesh.faces
+        self.normals = mesh.normals
+
+    def resize(self, projection, camera, light):
+        super(LoadableObject, self).resize(projection)
+        glUseProgram(self.program)
+        glUniform3f(self.camera, camera.x(), camera.y(), camera.z())
+        glUniform3f(self.light, light.x(), light.y(), light.z())
 
 
 class TypeableObject(LoadableObject):
