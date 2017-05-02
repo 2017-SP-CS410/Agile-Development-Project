@@ -243,11 +243,13 @@ class GameWidget(QGLWidget):
         # create the camera
         self.camera = QMatrix4x4()
         self.camera.perspective(60, 4.0/3.0, 0.1, 100.0)
-        self.camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
+        self.camerapos = QVector3D(10, 10, 10)
+        self.lightpos = QVector3D(0, 20, 0)
+        self.camera.lookAt(self.camerapos, QVector3D(0, 0, 0), QVector3D(0, 0, 10))
         self.resize()
 
     def resize(self):
-        self.player.resize(self.camera)
         self.ground.resize(self.camera)
+        self.player.resize(self.camera, self.camerapos, self.lightpos)
         for o in self.objects:
-            o.resize(self.camera)
+            o.resize(self.camera, self.camerapos, self.lightpos)

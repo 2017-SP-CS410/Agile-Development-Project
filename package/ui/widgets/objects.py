@@ -4,7 +4,7 @@ from array       import array
 from ctypes      import c_void_p
 from enum        import Enum
 from math import pi, cos, sin, inf
-from pyassimp    import load
+from pyassimp    import load, release
 from textwrap    import dedent
 from OpenGL.GL   import *
 from OpenGL.GLU  import *
@@ -42,23 +42,23 @@ class Drawable:
         return data.nbytes
 
     def destroy(self):
-        glDeleteBuffers(2, [vertexBuffer, faceBuffer])
+        glDeleteBuffers(2, [self.vertexBuffer, self.faceBuffer])
 
     def initializeGL(self):
         # create Vertex Array Object on the GPU
         self.vao = glGenVertexArrays(1)
         glBindVertexArray(self.vao)
         # create a buffer on the GPU
-        vertexBuffer, faceBuffer = glGenBuffers(2)
+        self.vertexBuffer, self.faceBuffer = glGenBuffers(2)
         # upload the data to the GPU
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
+        glBindBuffer(GL_ARRAY_BUFFER, self.vertexBuffer)
         glBufferData(
             GL_ARRAY_BUFFER,
             self.byteSize(self.vertices),
             self.byteData(self.vertices),
             GL_STATIC_DRAW
         )
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, faceBuffer)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, self.faceBuffer)
         glBufferData(
             GL_ELEMENT_ARRAY_BUFFER,
             self.byteSize(self.faces),
@@ -69,7 +69,7 @@ class Drawable:
         self.program = self.loadShaders()
         glUseProgram(self.program)
         # bind buffers to shader attributes
-        glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer)
+        glBindBuffer(GL_ARRAY_BUFFER, self.vertexBuffer)
         position = glGetAttribLocation(self.program, 'position')
         glEnableVertexAttribArray(position)
         glVertexAttribPointer(
@@ -297,16 +297,32 @@ class LoadableObject(Drawable):
         uniform mat4 projection;
         uniform mat4 model;
         in vec3 position;
+        in vec3 normal;
+        out vec3 pos;
+        out vec3 norm;
         void main()
         {
-           gl_Position = projection * model * vec4(position, 1.0);
+            gl_Position = projection * model * vec4(position, 1.0);
+            pos = (model * vec4(position, 1.0)).xyz;
+            norm = normalize((transpose(inverse(model)) * vec4(normal, 0)).xyz);
         }\
     """)
     fs_source = dedent("""
         #version 330
+        uniform vec3 lightpos;
+        uniform vec3 camerapos;
+        in vec3 pos;
+        in vec3 norm;
         void main()
         {
-           gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            vec3 L = normalize(lightpos - pos);
+            vec3 R = reflect(L, norm);
+            vec3 V = normalize(pos - camerapos);
+            float ambient = 0.2;
+            float diff = 0.2 * clamp(dot(norm, L), 0, 1);
+            float spec = pow(0.2 * clamp(dot(R, V), 0, 1), 255);
+            vec3 c = vec3(1.0, 1.0, 1.0);
+            gl_FragColor = vec4((ambient + diff + spec) * c, 1.0);
         }\
     """)
 
@@ -318,8 +334,33 @@ class LoadableObject(Drawable):
         self.model.translate(x, 0.5, y)
         self.model.rotate(direction, 0, 1, 0)
 
+    def initializeGL(self):
+        super(LoadableObject, self).initializeGL()
+        normalBuffer = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, normalBuffer)
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            self.byteSize(self.normals),
+            self.byteData(self.normals),
+            GL_STATIC_DRAW
+        )
+        glBindBuffer(GL_ARRAY_BUFFER, normalBuffer)
+        normal = glGetAttribLocation(self.program, 'normal')
+        glEnableVertexAttribArray(normal)
+        glVertexAttribPointer(
+            normal,
+            3,
+            GL_FLOAT,
+            GL_FALSE,
+            0,
+            c_void_p(0)
+        )
+        self.camera = glGetUniformLocation(self.program, 'camerapos')
+        self.light = glGetUniformLocation(self.program, 'lightpos')
+
     def loadObject(self, filename, heightoff=False):
-        mesh = load(filename).meshes[0]
+        self.scene = load(filename)
+        mesh = self.scene.meshes[0]
         self.vertices = mesh.vertices
         min_x = inf
         max_x = -inf
@@ -340,6 +381,13 @@ class LoadableObject(Drawable):
             v /= (diff/2)
 
         self.faces = mesh.faces
+        self.normals = mesh.normals
+
+    def resize(self, projection, camera, light):
+        super(LoadableObject, self).resize(projection)
+        glUseProgram(self.program)
+        glUniform3f(self.camera, camera.x(), camera.y(), camera.z())
+        glUniform3f(self.light, light.x(), light.y(), light.z())
 
 
 class TypeableObject(LoadableObject):
@@ -348,7 +396,8 @@ class TypeableObject(LoadableObject):
         # TODO: get word and score from word bank
 
     def destroy(self):
-        pass
+        super(TypeableObject, self).destroy()
+        #release(self.scene)
         # TODO: play destroy sound
         # TODO: remove from world
 
