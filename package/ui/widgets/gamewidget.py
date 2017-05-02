@@ -35,7 +35,7 @@ class GameWidget(QGLWidget):
         self.num_objects = num_objects
         self.restart = 0xFFFFFFFF
         self.close = False
-        self.check = False
+        self.checkword = False
         self.complete = False
 
 
@@ -86,12 +86,9 @@ class GameWidget(QGLWidget):
             self.player.movement = Movement.backward
         elif key == 'd':
             self.player.rotate = Rotate.left
-        elif key == ' ' and self.close == True:
-            if self.player.state == State.moving:
-                self.player.movement = State.typing
-                self.typeBox()
-            elif self.player.state == State.typing:
-                self.player.movement = State.moving
+        elif key == ' ' and self.close == True and self.player.state == State.moving:
+            self.player.state = State.typing
+            self.typeBox()
 
     def keyReleaseEvent(self, event):
         key = event.text()
@@ -128,16 +125,16 @@ class GameWidget(QGLWidget):
             return
         self.step -= 1 / 60
 
-        if(self.check == True):
+        if(self.checkword == True):
             self.checkSpell()
         self.btn.setText("Time is: " + str(int((self.step))))
 
-        # if self.last - int(self.step) == self.check:
-        #     self.last = int(self.step)
-        #     self.check = randint(2, 5)
-        #     if len(self.objects) < 10:
-        #         self.objects.append(self.objectFactory.createObject())
-        #         self.resize()
+        if self.last - int(self.step) == self.check:
+            self.last = int(self.step)
+            self.check = random.randint(2, 5)
+            if len(self.objects) < 10:
+                self.objects.append(self.objectFactory.createObject())
+                self.resize()
         # # if (self.readbox.text() == self.textbox.text()):
         # #    self.textbox.setText("")
         # self.btn.setText("Time is: " + str(int(self.step)))
@@ -150,18 +147,22 @@ class GameWidget(QGLWidget):
 
     def getVicinity(self):
         dist = math.inf
-        self.obj = None
-        for o in self.objects:
-            dist = min(dist, self.player.dist(o))
-            self.obj = o
-        if dist < self.vicinity:
-            self.close = True
-        if self.complete == True:
-            print(self.obj)
+        if self.player.state == State.moving:
+            for o in self.objects:
+                tmp = self.player.dist(o)
+                if tmp < dist:
+                    dist = tmp
+                    self.obj = o
+            if dist < self.vicinity:
+                self.close = True
+        elif self.player.state == State.typing and self.complete == True:
+            self.objects.remove(self.obj)
             self.obj.destroy()
-            #self.ob] = None
+            self.obj = None
             self.complete = False
-
+            self.close = False
+            self.setFocus()
+            self.player.state = State.moving
 
     def checkSpell(self):
         correctWord = self.readbox.text()
@@ -181,11 +182,8 @@ class GameWidget(QGLWidget):
                                                 border-color: black;')
                     self.readbox.close()
                     self.textbox.close()
-                    self.check = False
+                    self.checkword = False
                     self.complete = True
-                    print("IT GOT HERE")
-                    self.obj.destroy()
-                    #self.obj = None
             else:
                 self.textbox.setStyleSheet('color: red; \
                                                 background-color: black; \
@@ -197,7 +195,7 @@ class GameWidget(QGLWidget):
         self.scoreLabel.setText("Score: " + str(self.score))
 
     def typeBox(self):
-        self.check = True
+        self.checkword = True
         ran = random.randint(0, len(self.wordList))
         word = self.wordList[ran]
         value = getFinalValue(word)
