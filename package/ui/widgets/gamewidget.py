@@ -1,6 +1,6 @@
 import math
 import os
-from random             import randrange, randint, random
+import random
 from OpenGL.GL          import *
 from OpenGL.GLU         import *
 from PyQt5.QtCore       import QBasicTimer
@@ -29,11 +29,15 @@ class GameWidget(QGLWidget):
     def __init__(self, num_tiles=20, num_objects=10, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.vicinity = 1
+        self.vicinity = 2
         self.setMinimumSize(640, 480)
         self.num_tiles = num_tiles
         self.num_objects = num_objects
         self.restart = 0xFFFFFFFF
+        self.close = False
+        self.check = False
+        self.complete = False
+
 
         package_directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -51,7 +55,7 @@ class GameWidget(QGLWidget):
 
 
         songs = [music1, music2, music3, music4, music5, music6, music7, music8, music9, music10, music11]
-        randIndex = randrange(0,len(songs))
+        randIndex = random.randrange(0,len(songs))
         randMusic = songs[randIndex]
 
         self.backgroundMusic = QSound(randMusic)
@@ -60,7 +64,7 @@ class GameWidget(QGLWidget):
         self.score = 0
         self.objectFactory = ObjectFactory(num_tiles)
         self.wordList = makeWordList()
-        self.close = False
+
 
 
     def initializeGround(self):
@@ -123,8 +127,8 @@ class GameWidget(QGLWidget):
             self.timer.stop()
             return
         self.step -= 1 / 60
-        #if (self.readbox.text() == self.textbox.text()):
-        #    self.textbox.setText("")
+        if(self.check == True):
+            self.checkSpell()
         self.btn.setText("Time is: " + str(int((self.step))))
         self.scoreLabel.setText("Score: " + str(int(self.score)))
         self.pbar.setValue(int(self.step / 1.2))
@@ -133,15 +137,20 @@ class GameWidget(QGLWidget):
         self.update()
 
     def getVicinity(self):
-        self.close = False
         dist = math.inf
         obj = None
         for o in self.objects:
             dist = min(dist, self.player.dist(o))
             obj = o
         if dist < self.vicinity:
-            # TODO: visually designated obj as typable
             self.close = True
+        if self.complete == True:
+            print(obj)
+            obj.destroy()
+            self.complete = False
+            print("well Fuck")
+
+
 
     def checkSpell(self):
         correctWord = self.readbox.text()
@@ -162,6 +171,8 @@ class GameWidget(QGLWidget):
                     self.readbox.close()
                     self.textbox.close()
                     self.check = False
+                    self.complete = True
+                    print("IT GOT HERE")
             else:
                 self.textbox.setStyleSheet('color: red; \
                                                 background-color: black; \
@@ -169,10 +180,12 @@ class GameWidget(QGLWidget):
                 failCount += 1
 
     def wordCompleted(self, word):
-        print("init")
+        print(word)
         self.score += getFinalValue(word)
-        self.scoreLabel.setText("Score: " + self.score)
-        self.scoreLabel.setText("Score: " + str(self.score))
+        print(self.score)
+        print(getFinalValue(word))
+        #self.scoreLabel.setText("Score: " + self.score)
+        self.scoreLabel.setText("Score: " + str(self.score/len(word)))
 
     def typeBox(self):
         self.check = True
@@ -180,7 +193,6 @@ class GameWidget(QGLWidget):
         word = self.wordList[ran]
         value = getFinalValue(word)
         self.readbox = QLineEdit(self)
-        print("Build the text box")
         self.readbox.setText(word)
         self.readbox.setStyleSheet("background-color: black; color: white; border-color: black;")
         self.readbox.setReadOnly(True)
@@ -190,7 +202,6 @@ class GameWidget(QGLWidget):
         self.textbox.setStyleSheet("background-color: black; color: white; border-color: black;")
         self.textbox.move(0, 450)
         self.textbox.setFocus()
-        self.textbox.resize(640, 30)
         self.repaint()
         self.readbox.show()
         self.textbox.show()
