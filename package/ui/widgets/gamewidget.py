@@ -1,6 +1,7 @@
 import math
 import os
-import random
+
+from random             import randrange, randint
 from OpenGL.GL          import *
 from OpenGL.GLU         import *
 from PyQt5.QtCore       import QBasicTimer
@@ -55,7 +56,7 @@ class GameWidget(QGLWidget):
 
 
         songs = [music1, music2, music3, music4, music5, music6, music7, music8, music9, music10, music11]
-        randIndex = random.randrange(0,len(songs))
+        randIndex = randrange(0,len(songs))
         randMusic = songs[randIndex]
 
         self.backgroundMusic = QSound(randMusic)
@@ -198,7 +199,7 @@ class GameWidget(QGLWidget):
 
     def typeBox(self):
         self.check = True
-        ran = random.randint(0, len(self.wordList))
+        ran = randint(0, len(self.wordList))
         word = self.wordList[ran]
         value = getFinalValue(word)
         self.readbox = QLineEdit(self)
@@ -220,7 +221,7 @@ class GameWidget(QGLWidget):
         self.timer = QBasicTimer()
         self.timer.start(50/3, self)
         self.step = 120
-        self.check = random.randint(2, 5)
+        self.check = randint(2, 5)
         self.last = 120
 
 
@@ -244,11 +245,13 @@ class GameWidget(QGLWidget):
         # create the camera
         self.camera = QMatrix4x4()
         self.camera.perspective(60, 4.0/3.0, 0.1, 100.0)
-        self.camera.lookAt(QVector3D(10, 10, 10), QVector3D(0, 0, 0), QVector3D(0, 0, 10))
+        self.camerapos = QVector3D(10, 10, 10)
+        self.lightpos = QVector3D(0, 20, 0)
+        self.camera.lookAt(self.camerapos, QVector3D(0, 0, 0), QVector3D(0, 0, 10))
         self.resize()
 
     def resize(self):
-        self.player.resize(self.camera)
         self.ground.resize(self.camera)
+        self.player.resize(self.camera, self.camerapos, self.lightpos)
         for o in self.objects:
-            o.resize(self.camera)
+            o.resize(self.camera, self.camerapos, self.lightpos)
